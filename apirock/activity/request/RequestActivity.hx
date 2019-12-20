@@ -47,10 +47,12 @@ class RequestActivity extends Activity {
 
             try {
 
-                if (
-                    this.resultHeaders.exists('content-type')
-                    && this.resultHeaders.get('content-type').indexOf('application/json') > -1
-                ) data = haxe.Json.parse(this.resultData);
+                if (this.resultHeaders.exists('content-type') && this.resultHeaders.get('content-type').indexOf('application/json') > -1) data = haxe.Json.parse(this.resultData);
+                else {
+                    try {
+                        data = haxe.Json.parse(this.resultData);
+                    } catch (e:Dynamic) {}
+                }
 
             } catch (e:Dynamic) {
 
@@ -204,10 +206,12 @@ class RequestActivity extends Activity {
 
             try {
 
-                if (
-                    this.resultHeaders.exists('content-type')
-                    && this.resultHeaders.get('content-type').indexOf('application/json') > -1
-                ) data = haxe.Json.parse(this.resultData);
+                if (this.resultHeaders.exists('content-type') && this.resultHeaders.get('content-type').indexOf('application/json') > -1) data = haxe.Json.parse(this.resultData);
+                else {
+                    try {
+                        data = haxe.Json.parse(this.resultData);
+                    } catch (e:Dynamic) {}
+                }
 
             } catch (e:Dynamic) {
 
@@ -276,7 +280,7 @@ class RequestActivity extends Activity {
         return new RequestKeeperAndAssertsAndExpectingAndMusts(this);
     }
 
-    private function requestHelper(url:StringKeeper, data:Dynamic, method:String):RequestData {
+    private function requestHelper(url:StringKeeper, data:Dynamic, method:String, ?headers:Array<RequestHeader>):RequestData {
 
         var contentType:String = "application/x-www-form-urlencoded";
         var resultData:String = "";
@@ -308,40 +312,43 @@ class RequestActivity extends Activity {
             }
         }
 
+        var finalHeaders:Array<RequestHeader> = [new RequestHeader('content-type', contentType)];
+        if (headers != null) for (item in headers) finalHeaders.push(item);
+
         var requester:RequestData = {
             url : url,
             method : method,
             data : resultData,
-            headers : [new RequestHeader('content-type', contentType)]
+            headers : finalHeaders
         }
 
         return requester;
     }
 
-    public function POSTing(url:StringKeeper, ?data:Dynamic, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
+    public function POSTing(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
         return this.requesting(
-            this.requestHelper(url, data, "POST"),
+            this.requestHelper(url, data, "POST", headers),
             runBefore
         );
     }
 
-    public function GETting(url:StringKeeper, ?data:Dynamic, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
+    public function GETting(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
         return this.requesting(
-            this.requestHelper(url, data, "GET"),
+            this.requestHelper(url, data, "GET", headers),
             runBefore
         );
     }
 
-    public function DELETing(url:StringKeeper, ?data:Dynamic, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
+    public function DELETing(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
         return this.requesting(
-            this.requestHelper(url, data, "DELETE"),
+            this.requestHelper(url, data, "DELETE", headers),
             runBefore
         );
     }
 
-    public function PUTting(url:StringKeeper, ?data:Dynamic, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
+    public function PUTting(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
         return this.requesting(
-            this.requestHelper(url, data, "PUT"),
+            this.requestHelper(url, data, "PUT", headers),
             runBefore
         );
     }
