@@ -28,8 +28,8 @@ class RequestActivity extends Activity {
     public var acceptCodes:Array<Int> = [200, 299];
 
     public var resultCode:Int = 0;
-    public var resultData:String;
-    public var resultHeaders:Map<String, String>;
+    public var resultData:String = "";
+    public var resultHeaders:Map<String, String> = new Map<String, String>();
 
     public function new(apirock:APIRock, why:StringKeeper) {
         super(apirock);
@@ -38,60 +38,24 @@ class RequestActivity extends Activity {
     }
 
     private function validateData(index:Int, subIndex:Int):Int {
-
-//        if (this.anonClass != null) {
-//
-//            try {
-//                data = haxe.Json.parse(jsonString);
-//            } catch (e:Dynamic) {
-//                this.printCatchError("Error on parsing received data \n\n" + Std.string(jsonString));
-//            }
-//
-//
-//            subIndex++;
-//            ApiRockOut.printIndex('${index+1}.${subIndex}.', "Validating Expectations... ");
-//
-//            try {
-//                var anon:AnonStruct = Type.createInstance(this.anonClass, []);
-//
-//                if (Reflect.hasField(data, "data")) {
-//                    anon.validateAll(data.data);
-//                } else {
-//                    anon.validateAll(data);
-//                }
-//
-//                ApiRockOut.print("OK");
-//
-//            } catch (e:Dynamic) {
-//                var errors:Array<String> = e;
-//
-//                if (this.isCriticalStrof) {
-//
-//                    this.printCatchError(e);
-//
-//                } else {
-//                    ApiRockOut.print("ERROR");
-//                    for (error in errors) ApiRockOut.print(" - " + error);
-//
-//                    var reportError:String = 'EXPECTATION error at ${index+1}.${subIndex}.';
-//                    this.apirock.errors.push(reportError);
-//                }
-//            }
-//        }
-
         if (this.assertive != null) {
 
             ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making Assertives validation...');
 
-            var data:Dynamic = null;
-            var hasAssertiveErrors:Bool = false;
+            var data:Dynamic = this.resultData;
+            var hasError:Bool = false;
 
             try {
-                data = haxe.Json.parse(this.resultData);
+
+                if (
+                    this.resultHeaders.exists('content-type')
+                    && this.resultHeaders.get('content-type').indexOf('application/json') > -1
+                ) data = haxe.Json.parse(this.resultData);
+
             } catch (e:Dynamic) {
 
                 ApiRockOut.printWithTab("- Error! Received data is not a valid json.", 3);
-                hasAssertiveErrors = true;
+                hasError = true;
 
             }
 
@@ -99,7 +63,7 @@ class RequestActivity extends Activity {
                 if (this.assertive.compare(data)) {
                     ApiRockOut.printWithTab("- SUCCESS! The received data has the expected values.", 3);
                 } else {
-                    hasAssertiveErrors = true;
+                    hasError = true;
 
                     var reportError:String = 'ASSERTIVE errors at ${index+1}.${subIndex-1}.';
                     this.apirock.errors.push(reportError);
@@ -108,7 +72,7 @@ class RequestActivity extends Activity {
 
             ApiRockOut.printList(this.assertive.getErrors(), 3);
 
-            if (hasAssertiveErrors && this.isCriticalAsserts) {
+            if (hasError && this.isCriticalAsserts) {
 
                 ApiRockOut.print('');
                 ApiRockOut.printBox('Error on Critical Assertive');
@@ -121,24 +85,6 @@ class RequestActivity extends Activity {
 
         return subIndex;
 
-
-//        if (this.keepList.length > 0) {
-//
-//            try {
-//                data = haxe.Json.parse(jsonString);
-//            } catch (e:Dynamic) {
-//                this.printCatchError("Error on parsing received data \n\n" + Std.string(jsonString));
-//            }
-//
-//            subIndex++;
-////            CommandLineKit.printIndex('${index+1}.${subIndex}.', "Keeping Data... ");
-//
-//            for (keep in this.keepList) {
-//                keep.runKeeper(data);
-//            }
-//
-////            CommandLineKit.printInline("OK");
-//        }
     }
 
     override private function execute(index:Int):Void {
@@ -176,14 +122,21 @@ class RequestActivity extends Activity {
             http.setPostData(this.requestData.data);
 
             http.onStatus = function(value:Int):Void {
-                this.resultHeaders = http.responseHeaders;
+
+                this.resultHeaders = new Map<String, String>();
+
+                if (http.responseHeaders != null) {
+                    for (key in http.responseHeaders.keys()) {
+                        this.resultHeaders.set(key.toLowerCase(), http.responseHeaders.get(key));
+                    }
+                }
 
                 this.resultCode = value;
-                if (value == 301 && http.responseHeaders.exists("Location")) {
+                if (value == 301 && this.resultHeaders.exists("location")) {
 
-                    ApiRockOut.printWithTab('- Status 301: Making a redirect to ${Std.string(http.responseHeaders.get("Location"))}.', 3);
+                    ApiRockOut.printWithTab('- Status 301: Making a redirect to ${Std.string(this.resultHeaders.get("location"))}.', 3);
 
-                    this.requestData.url = Std.string(http.responseHeaders.get("Location"));
+                    this.requestData.url = Std.string(this.resultHeaders.get("location"));
                     doRequest();
                 }
             }
@@ -201,6 +154,8 @@ class RequestActivity extends Activity {
 
         this.validateResult(index);
         subIndex = this.validateData(index, subIndex);
+        subIndex = this.validateAnonStruct(index, subIndex);
+        subIndex = this.executeKeepers(index, subIndex);
 
     }
 
@@ -236,6 +191,82 @@ class RequestActivity extends Activity {
                 ApiRockOut.printWithTab('- SUCCESS! This test expected a code ${this.mustCode}.', 3);
             }
         }
+    }
+
+    private function validateAnonStruct(index:Int, subIndex:Int):Int {
+
+        if (this.anonClass != null) {
+
+            ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making structural validation...');
+
+            var data:Dynamic = this.resultData;
+            var hasError:Bool = false;
+
+            try {
+
+                if (
+                    this.resultHeaders.exists('content-type')
+                    && this.resultHeaders.get('content-type').indexOf('application/json') > -1
+                ) data = haxe.Json.parse(this.resultData);
+
+            } catch (e:Dynamic) {
+
+                ApiRockOut.printWithTab("- Error! Received data is not a valid json.", 3);
+                hasError = true;
+
+            }
+
+            if (!hasError) {
+                try {
+                    var anon:AnonStruct = Type.createInstance(this.anonClass, []);
+                    anon.validateAll(data);
+
+                    ApiRockOut.printWithTab("- Success!", 3);
+
+                } catch (e:Dynamic) {
+
+                    var errors:Array<String> = e;
+                    hasError = true;
+
+                    ApiRockOut.printWithTab("- Error", 3);
+                    ApiRockOut.printList(errors, 4);
+
+                }
+            }
+
+            if (hasError) this.apirock.errors.push('EXPECTATION error at ${index + 1}.${subIndex}.');
+
+            if (hasError && this.isCriticalStrof) {
+                ApiRockOut.print('');
+                ApiRockOut.printBox('Error on Critical Assertive');
+                ApiRockOut.print('');
+
+                Sys.exit(301);
+            }
+        }
+
+        return subIndex;
+    }
+
+    private function executeKeepers(index:Int, subIndex:Int):Int {
+
+
+        if (this.keepList.length > 0) {
+
+            ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Keeping data in memory...');
+            var data:Dynamic = null;
+
+            try {
+                data = haxe.Json.parse(this.resultData);
+            } catch (e:Dynamic) {
+
+            }
+
+            for (keep in this.keepList) keep.runKeeper(data, this.resultHeaders);
+
+        }
+
+        return subIndex;
     }
 
     public function requesting(requestData:RequestData, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {

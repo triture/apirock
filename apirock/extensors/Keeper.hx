@@ -19,42 +19,62 @@ class Keeper {
     }
 
     @:allow(apirock.activity.Activity)
-    private function runKeeper(data:Dynamic):Void {
+    private function runKeeper(data:Dynamic, responseHeaders:Map<String, String>):Void {
 
-        var tree:Array<String> = this.property.split(".");
         var dataFound:Dynamic = data;
 
-        try {
+        if (this.isData) {
+            // get data from result data
 
-            for (field in tree) {
+            var tree:Array<String> = this.property.split(".");
 
-                // is numeric field ?
-                if (Std.parseInt(field) != null && Std.is(dataFound, Array)) {
-                    // espera que o valor atual seja um array
+            try {
+                if (data == null) throw "Data is null";
 
-                    var index:Int = Std.parseInt(field);
-                    var dataFoundArray:Array<Dynamic> = cast(dataFound, Array<Dynamic>);
+                for (field in tree) {
 
-                    dataFound = dataFoundArray[index];
+                    // if this is a numeric field, array value is expected
+                    if (Std.parseInt(field) != null && Std.is(dataFound, Array)) {
 
-                } else {
-                    dataFound = Reflect.field(dataFound, field);
+                        var index:Int = Std.parseInt(field);
+                        var dataFoundArray:Array<Dynamic> = cast(dataFound, Array<Dynamic>);
+
+                        dataFound = dataFoundArray[index];
+
+                    } else {
+                        dataFound = Reflect.field(dataFound, field);
+                    }
                 }
+
+                if (dataFound == null) {
+                    // TODO: what to do in this situation??
+                    // maybe throw "NULL VALUE"
+                    // or set value as empty string
+                    dataFound = "";
+                }
+
+            } catch (e:Dynamic) {
+
+                ApiRockOut.printWithTab('- Error! Cannot found ${this.property} property', 3);
+                ApiRockOut.printBox(" KEEPER ERROR : ");
+
+                Sys.exit(1);
+
             }
+        } else {
+            // get data from headers
 
-            if (dataFound == null) throw "NULL VALUE";
+            if (responseHeaders == null || !responseHeaders.exists(this.property)) {
+                ApiRockOut.printWithTab('- Error! Cannot found ${this.property} header', 3);
+                ApiRockOut.printBox(" KEEPER ERROR : ");
 
-        } catch (e:Dynamic) {
-
-            ApiRockOut.print("");
-            ApiRockOut.print(" KEEPER ERROR : ");
-            ApiRockOut.print(" Cannot found " + this.property + " property");
-            ApiRockOut.print(" " + haxe.Json.stringify(data));
-            ApiRockOut.print(" ");
-
-            Sys.exit(1);
-
+                Sys.exit(1);
+            } else {
+                dataFound = responseHeaders.get(this.property);
+            }
         }
+
+        ApiRockOut.printWithTab('- Keeping ${this.property} in memory', 3);
 
         Keeper.addData(this.key, Std.string(dataFound));
     }
@@ -70,7 +90,7 @@ class Keeper {
 
     public function keepingHeader(header:String, key:String):Keeper {
         this.isData = false;
-        this.property = header;
+        this.property = header.toLowerCase();
         this.key = key;
         this.activity.keepList.push(this);
 
@@ -79,16 +99,7 @@ class Keeper {
 
     public function then():APIRock return this.activity.then();
 
-    static public function addData(key:String, value:String):Void {
-        #if apidebug
-        ApiRockOut.print(" ");
-        ApiRockOut.print(" KEEPER: " + key + " " + value);
-        ApiRockOut.print(" ");
-        #end
-
-        keeperMap.set(key, value);
-    }
-
+    static public function addData(key:String, value:String):Void keeperMap.set(key, value);
     static public function getData(key:String):String return keeperMap.exists(key) ? keeperMap.get(key) : "";
 
 }
