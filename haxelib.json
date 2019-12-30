@@ -1,0 +1,14 @@
+{
+    "name": "apirock",
+    "url": "https://github.com/triture/apirock",
+    "license": "MIT",
+    "tags": [],
+    "classPath": "src/",
+    "description": "",
+    "version": "0.1.0",
+    "releasenote": "First Release. Tests and suggestions are super welcome!",
+    "contributors": [ "triture" ],
+    "dependencies": {
+      "anonstruct" : ""
+    }
+  }
