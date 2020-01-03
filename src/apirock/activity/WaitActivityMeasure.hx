@@ -1,7 +1,7 @@
-package apirock.activity.wait;
+package apirock.activity;
 
 @:enum
-abstract WaitTimeMeasure(String) to String from String {
+abstract WaitActivityMeasure(String) to String from String {
     var MINUTES = "minutes";
     var SECONDS = "seconds";
     var HOURS = "hours";

@@ -5,8 +5,8 @@ import haxe.ds.StringMap;
 import apirock.activity.Activity;
 
 class Keeper {
-
-    static public var keeperMap:StringMap<String> = new StringMap<String>();
+    
+    static private var keeperMap:StringMap<String> = new StringMap<String>();
 
     private var isData:Bool = true;
     private var property:String;
@@ -97,7 +97,7 @@ class Keeper {
         return new Keeper(this.activity);
     }
 
-    public function then():APIRock return this.activity.then();
+    public function then():ApiRock return this.activity.then();
 
     static public function addData(key:String, value:String):Void keeperMap.set(key, value);
     static public function getData(key:String):String return keeperMap.exists(key) ? keeperMap.get(key) : "";

@@ -1,7 +1,5 @@
-package apirock.activity.request;
+package apirock.activity;
 
-import haxe.io.Bytes;
-import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
 import apirock.types.RequestHeader;
 import apirock.types.RequestData;
@@ -31,7 +29,7 @@ class RequestActivity extends Activity {
     public var resultData:String = "";
     public var resultHeaders:Map<String, String> = new Map<String, String>();
 
-    public function new(apirock:APIRock, why:StringKeeper) {
+    public function new(apirock:ApiRock, why:StringKeeper) {
         super(apirock);
 
         this.why = why;
@@ -47,7 +45,10 @@ class RequestActivity extends Activity {
 
             try {
 
-                if (this.resultHeaders.exists('content-type') && this.resultHeaders.get('content-type').indexOf('application/json') > -1) data = haxe.Json.parse(this.resultData);
+                if (
+                    this.resultHeaders.exists('content-type') && 
+                    this.resultHeaders.get('content-type').indexOf('application/json') > -1
+                ) data = haxe.Json.parse(this.resultData);
                 else {
                     try {
                         data = haxe.Json.parse(this.resultData);
@@ -354,7 +355,7 @@ class RequestActivity extends Activity {
     }
 }
 
-@:access(apirock.activity.request.RequestActivity)
+@:access(apirock.activity.RequestActivity)
 private class RequestThen extends Then {
 
     private var request:RequestActivity;
@@ -366,7 +367,7 @@ private class RequestThen extends Then {
 
 }
 
-@:access(apirock.activity.request.RequestActivity)
+@:access(apirock.activity.RequestActivity)
 private class RequestKeeper extends RequestThen {
 
     public function keepingData(property:String, key:String):Keeper {
@@ -381,7 +382,7 @@ private class RequestKeeper extends RequestThen {
 
 }
 
-@:access(apirock.activity.request.RequestActivity)
+@:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAsserts extends RequestKeeper {
 
     public function andMakeAsserts(valueToAssert:Dynamic, ?critical:Bool = true):RequestKeeper {
@@ -397,7 +398,7 @@ private class RequestKeeperAndAsserts extends RequestKeeper {
 
 }
 
-@:access(apirock.activity.request.RequestActivity)
+@:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAssertsAndExpecting extends RequestKeeperAndAsserts {
 
     public function expecting(anon:Class<AnonStruct>, critical:Bool = true):RequestKeeperAndAsserts {
@@ -409,7 +410,7 @@ private class RequestKeeperAndAssertsAndExpecting extends RequestKeeperAndAssert
 
 }
 
-@:access(apirock.activity.request.RequestActivity)
+@:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAssertsAndExpectingAndMusts extends RequestKeeperAndAssertsAndExpecting {
 
     public function mustDoCode(?code:Int = 200, ?critical:Bool = true):RequestKeeperAndAssertsAndExpecting {

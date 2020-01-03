@@ -1,11 +1,13 @@
 package apirock;
 
-import apirock.activity.request.RequestActivity;
+import apirock.activity.WaitActivity;
+import apirock.activity.WaitActivityMeasure;
+import apirock.activity.RequestActivity;
 import apirock.types.StringKeeper;
 import apirock.activity.Activity;
 import apirock.helper.ApiRockOut;
 
-class APIRock {
+class ApiRock {
 
     private var name:String;
 
@@ -25,13 +27,22 @@ class APIRock {
         this.name = name;
     }
 
-//    public function waitFor(time:Int, measure:WaitTimeMeasure = WaitTimeMeasure.SECONDS):Wait {
-//        var wait:Wait = new Wait(this, time, measure);
-//
-//        this.activityStack.push(wait);
-//
-//        return wait;
-//    }
+    public function addActivity(activity:Activity):Void this.activityStack.push(activity);
+
+    public function makeRequest(why:StringKeeper):RequestActivity {
+        var requester:RequestActivity = new RequestActivity(this, why);
+        this.addActivity(requester);
+        return requester;
+    }
+    
+   public function waitFor(time:Int, measure:WaitActivityMeasure):WaitActivity {
+       var wait:WaitActivity = new WaitActivity(this, time, measure == null ? WaitActivityMeasure.SECONDS : measure);
+
+       this.activityStack.push(wait);
+
+       return wait;
+   }
+
 //
 //    public function makeOAuthConnection(oauthEndPoint:String, loginEndPoint:String, scope:String, login:String, password:String):ConnectOAuth {
 //        var oauth = new ConnectOAuth(this, oauthEndPoint, loginEndPoint, scope, login, password);
@@ -50,12 +61,6 @@ class APIRock {
 //        this.activityStack.push(api);
 //        return api;
 //    }
-
-    public function makeRequest(why:StringKeeper):RequestActivity {
-        var requester:RequestActivity = new RequestActivity(this, why);
-        this.activityStack.push(requester);
-        return requester;
-    }
 //
 //    public function makeSQLQuery(why:StringKeeper):SQLRequest {
 //        var sql:SQLRequest = new SQLRequest(this, why);
@@ -63,8 +68,8 @@ class APIRock {
 //        return sql;
 //    }
 //
-
-    public function runTests():APIRock {
+    
+    public function runTests():ApiRock {
 
         ApiRockOut.printTitle("Running APIProck " + this.name);
 

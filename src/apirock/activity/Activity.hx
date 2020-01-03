@@ -6,7 +6,7 @@ import apirock.helper.ApiRockOut;
 
 class Activity {
 
-    private var apirock:APIRock;
+    private var apirock:ApiRock;
 
     @:allow(apirock.extensors.Keeper)
     private var keepList:Array<Keeper> = [];
@@ -14,7 +14,7 @@ class Activity {
     @:allow(apirock.assert.Assertives)
     private var assertive:Assertives = null;
 
-    public function new(apirock:APIRock) {
+    public function new(apirock:ApiRock) {
         this.apirock = apirock;
     }
 
@@ -36,9 +36,9 @@ class Activity {
         Sys.exit(1);
     }
 
-    public function then():APIRock return this.apirock;
+    public function then():ApiRock return this.apirock;
 
-    @:allow(apirock.APIRock)
+    @:allow(apirock.ApiRock)
     private function execute(index:Int):Void throw "Must override this method";
 
 

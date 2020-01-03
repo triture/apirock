@@ -1,16 +1,36 @@
 package apirock.assert;
 
+import datetime.DateTime;
 import apirock.activity.Activity;
 
+import anonstruct.AnonStruct;
+
+@:access(anonstruct.AnonStruct)
+@:access(anonstruct.AnonProp)
+@:access(anonstruct.AnonPropDate)
+@:access(anonstruct.AnonPropArray)
+@:access(anonstruct.AnonPropObject)
+@:access(anonstruct.AnonPropString)
+@:access(anonstruct.AnonPropInt)
+@:access(anonstruct.AnonPropFloat)
+@:access(anonstruct.AnonPropBool)
 class Assertives {
 
     private var assertive:Dynamic;
     private var errors:Array<String> = [];
     private var map:Array<String> = [];
 
-    public function new(activity:Activity) {
-        activity.assertive = this;
+    public function new(?activity:Activity) {
+        if (activity != null) activity.assertive = this;
     }
+
+    inline private function isString(value:Dynamic):Bool return new AnonStruct().valueString().validate_isString(value);
+    inline private function isInt(value:Dynamic):Bool return new AnonStruct().valueInt().validate_isInt(value);
+    inline private function isDate(value:Dynamic):Bool return new AnonStruct().valueDate().validate_isDateTime(value);
+    inline private function isFloat(value:Dynamic):Bool return new AnonStruct().valueFloat().validate_isFloat(value);
+    inline private function isBool(value:Dynamic):Bool return new AnonStruct().valueBool().validate_isBool(value);
+    inline private function isArray(value:Dynamic):Bool return new AnonStruct().valueArray().validate_isArray(value);
+    inline private function isObject(value:Dynamic):Bool return new AnonStruct().valueObject().validate_isObject(value);
 
     public function getErrors():Array<String> return this.errors.copy();
 
@@ -24,12 +44,13 @@ class Assertives {
 
     private function compareTypes(a:Dynamic, b:Dynamic):Bool {
         if (a == null && b == null) return true;
-        else if (Std.is(a, String) && Std.is(b, String)) return true;
-        else if (Std.is(a, Float) && Std.is(b, Float)) return true;
-        else if (Std.is(a, Int) && Std.is(b, Int)) return true;
-        else if (Std.is(a, Bool) && Std.is(b, Bool)) return true;
-        else if (Std.is(a, Array) && Std.is(b, Array)) return true;
-        else if (Reflect.isObject(a) && Reflect.isObject(b)) return true;
+        else if (this.isString(a) && this.isString(b)) return true;
+        else if (this.isInt(a) && this.isInt(b)) return true;
+        else if (this.isFloat(a) && this.isFloat(b)) return true;
+        else if (this.isBool(a) && this.isBool(b)) return true;
+        else if (this.isDate(a) && this.isDate(b)) return true;
+        else if (this.isArray(a) && this.isArray(b)) return true;
+        else if (this.isObject(a) && this.isObject(b)) return true;
         else {
 
             if (a == null || b == null) {
@@ -49,13 +70,15 @@ class Assertives {
     private function compareValues(a:Dynamic, b:Dynamic):Bool {
 
         if (this.compareTypes(a, b)) {
-
-            if (Std.is(a, String)) return this.compareStrings(a, b);
-            else if (Std.is(a, Float)) return this.compareFloats(a, b);
-            else if (Std.is(a, Int)) return this.compareInts(a, b);
-            else if (Std.is(a, Bool)) return this.compareBools(a, b);
-            else if (Std.is(a, Array)) return this.compareArrays(a, b);
-            else if (Reflect.isObject(a)) return this.compareObjects(a, b);
+            
+            if (a == null) return a == b;
+            else if (this.isString(a)) return this.compareStrings(a, b);
+            else if (this.isInt(a)) return this.compareFloats(a, b);
+            else if (this.isFloat(a)) return this.compareInts(a, b);
+            else if (this.isBool(a)) return this.compareBools(a, b);
+            else if (this.isArray(a)) return this.compareArrays(a, b);
+            else if (this.isDate(a)) return this.compareDates(a, b);
+            else if (this.isObject(a)) return this.compareObjects(a, b);
             else {
 
                 this.errors.push("Unable to identify types");
@@ -75,6 +98,36 @@ class Assertives {
         error += ": Expects '" + Std.string(expected) + "' and Gets '" + Std.string(gets) + "'";
 
         this.errors.push(error);
+    }
+
+    private function compareDates(a:Dynamic, b:Dynamic):Bool {
+        var aString:String = '';
+        var bString:String = '';
+
+        if (Std.is(a, Date)) {
+            var aDate:DateTime = DateTime.fromDate(a);
+            aString = aDate.toString();
+        } else if (Std.is(a, String)) {
+            var aDate:DateTime = DateTime.fromString(a);
+            aString = aDate.toString();
+        } else if (Std.is(a, Float)) {
+            var aDate:DateTime = DateTime.fromTime(a);
+            aString = aDate.toString();
+        }
+
+        if (Std.is(b, Date)) {
+            var bDate:DateTime = DateTime.fromDate(b);
+            bString = bDate.toString();
+        } else if (Std.is(b, String)) {
+            var bDate:DateTime = DateTime.fromString(b);
+            bString = bDate.toString();
+        } else if (Std.is(b, Float)) {
+            var bDate:DateTime = DateTime.fromTime(b);
+            bString = bDate.toString();
+        }
+
+        if (aString == '' || bString == '') return false;
+        else return aString == bString;
     }
 
     private function compareStrings(a:String, b:String):Bool {
