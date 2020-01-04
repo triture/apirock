@@ -3,6 +3,6 @@
 -lib utest
 -lib apirock
 
--main ApiRockUnitTest
+-main ApiRockTest
 
 -neko build/apirock.n

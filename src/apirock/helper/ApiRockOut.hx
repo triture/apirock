@@ -4,6 +4,12 @@ class ApiRockOut {
 
     private static var TAB:String = "    ";
 
+    private static var ccode = '\033[0m';
+    private static var red = ['[red]', '[/red]', '\033[0;31m'];
+    private static var cyan = ['[cyan]', '[/cyan]', '\033[0;36m'];
+    private static var green = ['[green]', '[/green]', '\033[0;32m'];
+    private static var yellow = ['[yellow]', '[/yellow]', '\033[0;33m'];
+
     static public function printWithTab(text:String, tabs:Int):Void print(repeat(TAB, tabs) + text);
 
     static public function printIndex(index:String, text:String):Void {
@@ -33,6 +39,11 @@ class ApiRockOut {
     }
 
     static public function print(info:String):Void {
+        info = info.split(red[0]).join(red[2]).split(red[1]).join(ccode);
+        info = info.split(cyan[0]).join(cyan[2]).split(cyan[1]).join(ccode);
+        info = info.split(green[0]).join(green[2]).split(green[1]).join(ccode);
+        info = info.split(yellow[0]).join(yellow[2]).split(yellow[1]).join(ccode);
+
         Sys.println(info);
     }
 

@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
 import apirock.types.RequestHeader;
 import apirock.types.RequestData;
@@ -20,7 +21,14 @@ class RequestActivity extends Activity {
     private var isCriticalAsserts:Bool = false;
     private var isCriticalStrof:Bool = true;
     private var mustCode:Null<Int>;
-    private var requestData:RequestData;
+
+    private var requestUrl:StringKeeper = '';
+    private var requestMethod:StringKeeper = 'GET';
+    private var requestHedader:Array<KeyValue> = [];
+    private var requestDataRaw:StringKeeper;
+    private var requestDataJson:StringKeeper;
+    private var requestDataForm:Array<KeyValue>;
+    private var requestDataQueryString:Array<KeyValue>;
 
     // min / max codes
     public var acceptCodes:Array<Int> = [200, 299];
@@ -33,6 +41,76 @@ class RequestActivity extends Activity {
         super(apirock);
 
         this.why = why;
+    }
+
+    private function helperGenerateUrlEncodedData(items:Array<KeyValue>):String {
+        if (items == null) return '';
+
+        var result:String = '';
+        
+        var map:StringMap<Array<String>> = new StringMap<Array<String>>();
+
+        for (item in items) {
+            var key:String = item.key.toString();
+            var value:String = item.value.toString();
+            
+            var values:Array<String> = [];
+
+            if (map.exists(key)) values = map.get(key);
+            else if (map.exists(key + '[]')) values = map.get(key + '[]');
+            else map.set(key, values);
+
+            values.push(value);
+        }
+
+        for (key in map.keys()) {
+            var values:Array<String> = map.get(key);
+            var finalKey:String = StringTools.endsWith(key, '[]') ? StringTools.urlEncode(key.substr(0, key.length-2)) + '[]' : StringTools.urlEncode(key);
+
+            if (values.length > 1 && !StringTools.endsWith(finalKey, '[]')) finalKey += '[]';
+
+            for (value in values) {
+                result += '${result.length == 0 ? '' : '&'}${finalKey}=${StringTools.urlEncode(value)}';
+            }
+
+        }
+
+        return result;
+    }
+
+    private function helperGenerateRequestData():RequestData {
+
+        var url:String = this.requestUrl.toString();
+        var queryString:String = this.helperGenerateUrlEncodedData(this.requestDataQueryString);
+
+        if (queryString.length > 0) url += '${url.indexOf('?') == -1 ? '?' : '&'}${this.helperGenerateUrlEncodedData(this.requestDataQueryString)}';
+
+        var method:String = this.requestMethod.toString().toUpperCase();
+
+        var headers:StringMap<String> = new StringMap<String>();
+        for (header in this.requestHedader) headers.set(header.key.toString().toLowerCase(), header.value);
+        
+        var data:String = '';
+        var dataContentType:String = 'application/x-www-form-urlencoded';
+        if (this.requestDataRaw != null) {
+            data = this.requestDataRaw.toString();
+            dataContentType = 'text/plain';
+        } else if (this.requestDataForm != null) data = this.helperGenerateUrlEncodedData(this.requestDataForm);
+        else if (this.requestDataJson != null) {
+            data = this.requestDataJson.toString();
+            dataContentType = 'application/json';
+        }
+        
+        if (!headers.exists('content-type')) headers.set('content-type', dataContentType);
+
+        var result:RequestData = {
+            url : url,
+            method : method,
+            data : data,
+            headers : headers
+        }
+
+        return result;
     }
 
     private function validateData(index:Int, subIndex:Int):Int {
@@ -90,15 +168,18 @@ class RequestActivity extends Activity {
 
     }
 
-    override private function execute(index:Int):Void {
+    override 
+    private function execute(index:Int):Void {
 
         var subIndex:Int = 1;
 
         if (this.runBefore != null) this.runBefore();
 
+        var requestData:RequestData = this.helperGenerateRequestData();
+
         ApiRockOut.printIndex(
             '${index + 1}.',
-            'Trying to ${this.why} making a ${this.requestData.method.toString().toUpperCase()} request at ${this.requestData.url}... '
+            '[cyan]${this.why.toString().toUpperCase()}[/cyan] making a [cyan]${requestData.method}[/cyan] request to [yellow]${requestData.url}[/yellow]... '
         );
 
         ApiRockOut.printIndex(
@@ -119,18 +200,33 @@ class RequestActivity extends Activity {
 
             output = new BytesOutput();
 
-            var http:haxe.Http = new haxe.Http(this.requestData.url);
+            var http:haxe.Http = new haxe.Http(requestData.url);
 
-            for (header in this.requestData.headers) http.setHeader(header.header, header.value);
-            http.setPostData(this.requestData.data);
+            for (header in requestData.headers.keys()) {
+                http.setHeader(header, requestData.headers.get(header));
+                
+                #if debug
+                ApiRockOut.printWithTab('REQUEST: Header ' + header + ' : ' + requestData.headers.get(header), 3);
+                #end
+            }
+
+            http.setPostData(requestData.data);
 
             http.onStatus = function(value:Int):Void {
+
+                #if debug
+                ApiRockOut.printWithTab('RESULT: Status ' + Std.string(value), 3);
+                #end
 
                 this.resultHeaders = new Map<String, String>();
 
                 if (http.responseHeaders != null) {
                     for (key in http.responseHeaders.keys()) {
                         this.resultHeaders.set(key.toLowerCase(), http.responseHeaders.get(key));
+
+                        #if debug
+                        ApiRockOut.printWithTab('RESULT: Header ' + key.toLowerCase() + ' : ' + http.responseHeaders.get(key), 3);
+                        #end
                     }
                 }
 
@@ -139,7 +235,7 @@ class RequestActivity extends Activity {
 
                     ApiRockOut.printWithTab('- Status 301: Making a redirect to ${Std.string(this.resultHeaders.get("location"))}.', 3);
 
-                    this.requestData.url = Std.string(this.resultHeaders.get("location"));
+                    requestData.url = Std.string(resultHeaders.get("location"));
                     doRequest();
                 }
             }
@@ -148,12 +244,16 @@ class RequestActivity extends Activity {
 
             }
 
-            http.customRequest(true, output, this.requestData.method.toString().toUpperCase());
+            http.customRequest(true, output, requestData.method);
         }
 
         doRequest();
 
         this.resultData = output.getBytes().toString();
+
+        #if debug
+        ApiRockOut.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
+        #end
 
         this.validateResult(index);
         subIndex = this.validateData(index, subIndex);
@@ -274,85 +374,19 @@ class RequestActivity extends Activity {
         return subIndex;
     }
 
-    public function requesting(requestData:RequestData, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
-        this.requestData = requestData;
+    public function requesting(url:StringKeeper, method:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders {
+        this.requestUrl = url;
+        this.requestMethod = method;
         this.runBefore = runBefore;
 
-        return new RequestKeeperAndAssertsAndExpectingAndMusts(this);
+        return new RequestDataAndHeaders(this);
     }
 
-    private function requestHelper(url:StringKeeper, data:Dynamic, method:String, ?headers:Array<RequestHeader>):RequestData {
-
-        var contentType:String = "application/x-www-form-urlencoded";
-        var resultData:String = "";
-
-        if (data == null) contentType = "application/x-www-form-urlencoded";
-        else if (Std.is(data, String) || Std.is(data, Int) || Std.is(data, Float)) {
-
-            resultData = Std.string(data);
-
-
-            if (resultData.length == 0) contentType = "application/x-www-form-urlencoded";
-            else {
-                // is json string
-                try {
-                    var jsonObject:Dynamic = haxe.Json.parse(data);
-                    contentType = "application/json";
-
-                } catch (e:Dynamic) {
-                    contentType = "multipart/form-data";
-                }
-
-            }
-        } else {
-            try {
-                resultData = haxe.Json.stringify(data);
-                contentType = "application/json";
-            } catch(e:Dynamic) {
-
-            }
-        }
-
-        var finalHeaders:Array<RequestHeader> = [new RequestHeader('content-type', contentType)];
-        if (headers != null) for (item in headers) finalHeaders.push(item);
-
-        var requester:RequestData = {
-            url : url,
-            method : method,
-            data : resultData,
-            headers : finalHeaders
-        }
-
-        return requester;
-    }
-
-    public function POSTing(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
-        return this.requesting(
-            this.requestHelper(url, data, "POST", headers),
-            runBefore
-        );
-    }
-
-    public function GETting(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
-        return this.requesting(
-            this.requestHelper(url, data, "GET", headers),
-            runBefore
-        );
-    }
-
-    public function DELETing(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
-        return this.requesting(
-            this.requestHelper(url, data, "DELETE", headers),
-            runBefore
-        );
-    }
-
-    public function PUTting(url:StringKeeper, ?data:Dynamic, ?headers:Array<RequestHeader>, ?runBefore:Void->Void):RequestKeeperAndAssertsAndExpectingAndMusts {
-        return this.requesting(
-            this.requestHelper(url, data, "PUT", headers),
-            runBefore
-        );
-    }
+    public function POSTing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'POST', runBefore);
+    public function GETting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'GET', runBefore);
+    public function DELETing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'DELETE', runBefore);
+    public function PUTting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'PUT', runBefore);
+    
 }
 
 @:access(apirock.activity.RequestActivity)
@@ -385,12 +419,12 @@ private class RequestKeeper extends RequestThen {
 @:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAsserts extends RequestKeeper {
 
-    public function andMakeAsserts(valueToAssert:Dynamic, ?critical:Bool = true):RequestKeeper {
+    public function andMakeAsserts(valueToAssert:Dynamic):RequestKeeper {
 
         var assertive:Assertives = new Assertives(this.request);
         assertive.setAssertive(valueToAssert);
 
-        this.request.isCriticalAsserts = critical;
+        this.request.isCriticalAsserts = true;
 
         var assert:RequestKeeper = new RequestKeeper(this.request);
         return assert;
@@ -401,37 +435,84 @@ private class RequestKeeperAndAsserts extends RequestKeeper {
 @:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAssertsAndExpecting extends RequestKeeperAndAsserts {
 
-    public function expecting(anon:Class<AnonStruct>, critical:Bool = true):RequestKeeperAndAsserts {
+    public function expecting(anon:Class<AnonStruct>):RequestKeeperAndAsserts {
         this.request.anonClass = anon;
-        this.request.isCriticalStrof = critical;
+        this.request.isCriticalStrof = true;
 
         return new RequestKeeperAndAsserts(this.request);
     }
-
 }
 
 @:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAssertsAndExpectingAndMusts extends RequestKeeperAndAssertsAndExpecting {
 
-    public function mustDoCode(?code:Int = 200, ?critical:Bool = true):RequestKeeperAndAssertsAndExpecting {
+    public function mustDoCode(?code:Int = 200):RequestKeeperAndAssertsAndExpecting {
         this.request.acceptCodes = [code, code];
         this.request.mustCode = code;
-        this.request.isCriticalRequest = critical;
+        this.request.isCriticalRequest = true;
         return this;
     }
 
-    public function mustFail(critical:Bool = false):RequestKeeperAndAssertsAndExpecting {
+    public function mustFail():RequestKeeperAndAssertsAndExpecting {
         this.request.acceptCodes = [300, 999];
         this.request.mustFail = true;
-        this.request.isCriticalRequest = critical;
+        this.request.isCriticalRequest = true;
         return this;
     }
 
-    public function mustPass(critical:Bool = true):RequestKeeperAndAssertsAndExpecting {
+    public function mustPass():RequestKeeperAndAssertsAndExpecting {
         this.request.acceptCodes = [200, 299];
         this.request.mustFail = false;
-        this.request.isCriticalRequest = critical;
+        this.request.isCriticalRequest = true;
         return this;
     }
 
+}
+
+@:access(apirock.activity.RequestActivity)
+private class RequestDataAndHeaders extends RequestKeeperAndAssertsAndExpectingAndMusts {
+    
+    public function sendingHeader(head:StringKeeper, value:StringKeeper):RequestDataAndHeaders {
+        if (this.request.requestHedader == null) this.request.requestHedader = [];
+        this.request.requestHedader.push({key:head, value:value});
+        return this;
+    }
+
+    public function sendQueryStringData(key:StringKeeper, value:StringKeeper):RequestDataAndHeaders {
+        if (this.request.requestDataQueryString == null) this.request.requestDataQueryString = [];
+        this.request.requestDataQueryString.push({key:key, value:value});
+        return this;
+    }
+
+    public function sendingJsonData(data:StringKeeper):RequestKeeperAndAssertsAndExpectingAndMusts {
+        this.request.requestDataJson = data;
+        return this;
+    }
+
+    public function sendingRawData(data:StringKeeper):RequestKeeperAndAssertsAndExpectingAndMusts {
+        this.request.requestDataRaw = data;
+        return this;
+    }
+
+    public function sendingFormData(fieldName:StringKeeper, fieldValue:StringKeeper):RequestDataForm {
+        return new RequestDataForm(this.request).sendingFormData(fieldName, fieldValue);
+    }
+
+}
+
+@:access(apirock.activity.RequestActivity)
+private class RequestDataForm extends RequestKeeperAndAssertsAndExpectingAndMusts {
+    
+    public function sendingFormData(fieldName:StringKeeper, fieldValue:StringKeeper):RequestDataForm {
+        if (this.request.requestDataForm == null) this.request.requestDataForm = [];
+        this.request.requestDataForm.push({key: fieldName, value: fieldValue});
+
+        return this;
+    }
+
+}
+
+private typedef KeyValue = {
+    var key:StringKeeper;
+    var value:StringKeeper;
 }
