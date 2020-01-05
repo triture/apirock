@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import apirock.ApiRock;
 import apirock.helper.ApiRockOut;
 
 class WaitActivity extends Activity {

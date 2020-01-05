@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import apirock.ApiRock;
 import apirock.extensors.Keeper;
 import apirock.helper.ApiRockOut;
 

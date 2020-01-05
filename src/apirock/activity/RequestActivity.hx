@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import apirock.ApiRock;
 import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
 import apirock.types.RequestData;

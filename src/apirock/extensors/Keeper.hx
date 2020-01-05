@@ -1,5 +1,6 @@
 package apirock.extensors;
 
+import apirock.ApiRock;
 import apirock.helper.ApiRockOut;
 import haxe.ds.StringMap;
 import apirock.activity.Activity;

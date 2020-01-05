@@ -1,8 +1,6 @@
 package apirock.assert;
 
 import datetime.DateTime;
-import apirock.activity.Activity;
-
 import anonstruct.AnonStruct;
 
 @:access(anonstruct.AnonStruct)
