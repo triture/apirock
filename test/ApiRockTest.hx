@@ -64,13 +64,29 @@ class ApiRockTest {
         .makeRequest('Testing sending headers')
             .GETting('https://postman-echo.com/headers')
             .sendingHeader('my-header', 'header value')
+            .mustPass()
             .makeDataAsserts({headers:{'my-header': 'header value'}})
         .then()
 
         .makeRequest('Testing received headers')
             .GETting('https://postman-echo.com/response-headers')
             .sendQueryStringData('foo', 'bar')
+            .mustPass()
             .makeHeadAsserts({foo:'bar'})
+        .then()
+
+        .makeRequest('Failing a basic authentication')
+            .GETting('https://postman-echo.com/basic-auth')
+            .sendingBasicAUTH('wrong_user', 'wrong_password')
+            .mustFail()
+            .makeDataAsserts('Unauthorized')
+        .then()
+
+        .makeRequest('Testing basic authentication')
+            .GETting('https://postman-echo.com/basic-auth')
+            .sendingBasicAUTH('postman', 'password')
+            .mustPass()
+            .makeDataAsserts({authenticated:true})
         .then()
 
         .runTests();
