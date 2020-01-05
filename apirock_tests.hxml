@@ -1,8 +1,26 @@
 -cp test
-
 -lib utest
 -lib apirock
 
--main ApiRockTest
+--each
 
--neko build/apirock.n
+# NEKO
+-main ApiRockUnitTest
+-neko build/apirock_utest.n
+
+--next
+
+-main ApiRockTest
+-neko build/apirock_test.n
+
+--next
+
+# CPP
+-lib hxcpp
+-main ApiRockUnitTest
+-cpp build/cpp/apirock_utest
+
+--next
+-lib hxcpp
+-main ApiRockTest
+-cpp build/cpp/apirock_test

@@ -8,7 +8,7 @@ import utest.Test;
 class CaseAssertives extends Test {
     
     function testCompareSameTypes() {
-        var a:Assertives = new Assertives(null);
+        var a:Assertives = new Assertives();
 
         Assert.isTrue(a.compareTypes(null, null));
         Assert.isTrue(a.compareTypes("", ""));
@@ -21,7 +21,7 @@ class CaseAssertives extends Test {
     }
 
     function testCompareWrongTypes() {
-        var a:Assertives = new Assertives(null);
+        var a:Assertives = new Assertives();
 
         Assert.isFalse(a.compareTypes("", null));
         Assert.isFalse(a.compareTypes("", 0));
@@ -66,7 +66,7 @@ class CaseAssertives extends Test {
     }
 
     function testCompareValues() {
-        var a:Assertives = new Assertives(null);
+        var a:Assertives = new Assertives();
 
         Assert.isTrue(a.compareValues(null, null));
         Assert.isTrue(a.compareValues('', ''));
@@ -91,7 +91,7 @@ class CaseAssertives extends Test {
     }
 
     function testCompareComplexValue() {
-        var a:Assertives = new Assertives(null);
+        var a:Assertives = new Assertives();
         var ref:Dynamic = {
             a : 0,
             b : 'b',

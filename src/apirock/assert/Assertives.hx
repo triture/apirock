@@ -72,13 +72,13 @@ class Assertives {
         if (this.compareTypes(a, b)) {
             
             if (a == null) return a == b;
-            else if (this.isString(a)) return this.compareStrings(a, b);
-            else if (this.isInt(a)) return this.compareFloats(a, b);
-            else if (this.isFloat(a)) return this.compareInts(a, b);
-            else if (this.isBool(a)) return this.compareBools(a, b);
-            else if (this.isArray(a)) return this.compareArrays(a, b);
-            else if (this.isDate(a)) return this.compareDates(a, b);
-            else if (this.isObject(a)) return this.compareObjects(a, b);
+            else if (this.isString(a) && this.isString(b)) return this.compareStrings(a, b);
+            else if (this.isInt(a) && this.isInt(b)) return this.compareInts(a, b);
+            else if (this.isFloat(a) && this.isFloat(b)) return this.compareFloats(a, b);
+            else if (this.isBool(a) && this.isBool(b)) return this.compareBools(a, b);
+            else if (this.isArray(a) && this.isArray(b)) return this.compareArrays(a, b);
+            else if (this.isDate(a) && this.isDate(b)) return this.compareDates(a, b);
+            else if (this.isObject(a) && this.isObject(b)) return this.compareObjects(a, b);
             else {
 
                 this.errors.push("Unable to identify types");
