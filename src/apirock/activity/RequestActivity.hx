@@ -2,7 +2,6 @@ package apirock.activity;
 
 import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
-import apirock.types.RequestHeader;
 import apirock.types.RequestData;
 import apirock.helper.ApiRockOut;
 import anonstruct.AnonStruct;
@@ -18,7 +17,6 @@ class RequestActivity extends Activity {
     private var anonClass:Class<AnonStruct>;
     private var mustFail:Bool = false;
     private var isCriticalRequest:Bool = true;
-    private var isCriticalAsserts:Bool = false;
     private var isCriticalStrof:Bool = true;
     private var mustCode:Null<Int>;
 
@@ -29,6 +27,9 @@ class RequestActivity extends Activity {
     private var requestDataJson:StringKeeper;
     private var requestDataForm:Array<KeyValue>;
     private var requestDataQueryString:Array<KeyValue>;
+
+    private var assertData:Assertives = null;
+    private var assertHeader:Assertives = null;
 
     // min / max codes
     public var acceptCodes:Array<Int> = [200, 299];
@@ -113,16 +114,42 @@ class RequestActivity extends Activity {
         return result;
     }
 
-    private function validateData(index:Int, subIndex:Int):Int {
-        if (this.assertive != null) {
+    private function runAssertive(label:String, assert:Assertives, data:Dynamic, index:Int, subIndex:Int):Int {
+        
+        ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making Assertives on received ${label}...');
+        
+        var hasError:Bool = false;
 
-            ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making Assertives validation...');
+        if (assert.compare(data)) {
+            ApiRockOut.printWithTab('- SUCCESS! The received ${label} has the expected values.', 3);
+        } else {
+            hasError = true;
+
+            var reportError:String = 'ASSERTIVE errors at ${index+1}.${subIndex-1}.';
+            this.apirock.errors.push(reportError);
+        }
+
+        ApiRockOut.printList(assert.getErrors(), 3);
+
+        if (hasError) {
+
+            ApiRockOut.print('');
+            ApiRockOut.printBox('Assertive Error');
+            ApiRockOut.print('');
+
+            Sys.exit(301);
+        }
+        
+
+        return subIndex;
+    }
+
+    private function validateData(index:Int, subIndex:Int):Int {
+        if (this.assertData != null) {
 
             var data:Dynamic = this.resultData;
-            var hasError:Bool = false;
 
             try {
-
                 if (
                     this.resultHeaders.exists('content-type') && 
                     this.resultHeaders.get('content-type').indexOf('application/json') > -1
@@ -136,32 +163,23 @@ class RequestActivity extends Activity {
             } catch (e:Dynamic) {
 
                 ApiRockOut.printWithTab("- Error! Received data is not a valid json.", 3);
-                hasError = true;
-
-            }
-
-            if (data != null) {
-                if (this.assertive.compare(data)) {
-                    ApiRockOut.printWithTab("- SUCCESS! The received data has the expected values.", 3);
-                } else {
-                    hasError = true;
-
-                    var reportError:String = 'ASSERTIVE errors at ${index+1}.${subIndex-1}.';
-                    this.apirock.errors.push(reportError);
-                }
-            }
-
-            ApiRockOut.printList(this.assertive.getErrors(), 3);
-
-            if (hasError && this.isCriticalAsserts) {
-
+                
                 ApiRockOut.print('');
-                ApiRockOut.printBox('Error on Critical Assertive');
+                ApiRockOut.printBox('Assertive Error');
                 ApiRockOut.print('');
 
                 Sys.exit(301);
-
             }
+
+            subIndex = this.runAssertive('DATA', this.assertData, data, index, subIndex);
+        }
+
+        if (this.assertHeader != null) {
+            var headerData:Dynamic = {}
+            
+            for (key in this.resultHeaders.keys()) Reflect.setField(headerData, key, this.resultHeaders.get(key));
+            
+            subIndex = this.runAssertive('HEADERS', this.assertHeader, headerData, index, subIndex);
         }
 
         return subIndex;
@@ -171,7 +189,7 @@ class RequestActivity extends Activity {
     override 
     private function execute(index:Int):Void {
 
-        var subIndex:Int = 1;
+        var subIndex:Int = 0;
 
         if (this.runBefore != null) this.runBefore();
 
@@ -266,11 +284,11 @@ class RequestActivity extends Activity {
         if (this.resultCode < this.acceptCodes[0] || this.resultCode > this.acceptCodes[1]) {
             if (this.mustCode == null) {
 
-                if (this.mustFail) ApiRockOut.printWithTab("- Error! This test should be FAIL.", 3);
-                else ApiRockOut.printWithTab("- Error! This test should be SUCCESS.", 3);
+                if (this.mustFail) ApiRockOut.printWithTab("- ERROR! This test should be FAIL.", 3);
+                else ApiRockOut.printWithTab("- ERROR! This test should be SUCCESS.", 3);
 
             } else {
-                ApiRockOut.printWithTab('- Error! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
+                ApiRockOut.printWithTab('- ERROR! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
             }
 
             if (this.isCriticalRequest) {
@@ -288,7 +306,7 @@ class RequestActivity extends Activity {
             if (this.mustCode == null) {
 
                 if (this.mustFail) ApiRockOut.printWithTab("- SUCCESS. This test should FAIL.", 3);
-                else ApiRockOut.printWithTab("- SUCCESS. This test should be SUCCESS.", 3);
+                else ApiRockOut.printWithTab("- SUCCESS! This test should be SUCCESS.", 3);
 
             } else {
                 ApiRockOut.printWithTab('- SUCCESS! This test expected a code ${this.mustCode}.', 3);
@@ -316,7 +334,7 @@ class RequestActivity extends Activity {
 
             } catch (e:Dynamic) {
 
-                ApiRockOut.printWithTab("- Error! Received data is not a valid json.", 3);
+                ApiRockOut.printWithTab("- ERROR! Received data is not a valid json.", 3);
                 hasError = true;
 
             }
@@ -386,6 +404,7 @@ class RequestActivity extends Activity {
     public function GETting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'GET', runBefore);
     public function DELETing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'DELETE', runBefore);
     public function PUTting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'PUT', runBefore);
+    public function PATCHing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'PATCH', runBefore);
     
 }
 
@@ -417,16 +436,30 @@ private class RequestKeeper extends RequestThen {
 }
 
 @:access(apirock.activity.RequestActivity)
-private class RequestKeeperAndAsserts extends RequestKeeper {
+private class RequestKeeperAndDataAsserts extends RequestKeeper {
 
-    public function andMakeAsserts(valueToAssert:Dynamic):RequestKeeper {
-
-        var assertive:Assertives = new Assertives(this.request);
-        assertive.setAssertive(valueToAssert);
-
-        this.request.isCriticalAsserts = true;
+    public function makeDataAsserts(dataAssert:Dynamic):RequestKeeper {
+        
+        this.request.assertData = new Assertives();
+        this.request.assertData.setAssertive(dataAssert);
 
         var assert:RequestKeeper = new RequestKeeper(this.request);
+        return assert;
+    }
+
+}
+
+@:access(apirock.activity.RequestActivity)
+private class RequestKeeperAndAsserts extends RequestKeeper {
+
+    public function makeDataAsserts(dataAssert:Dynamic):RequestKeeper return new RequestKeeperAndDataAsserts(this.request).makeDataAsserts(dataAssert);
+    
+    public function makeHeadAsserts(headAssert:Dynamic):RequestKeeperAndDataAsserts {
+        
+        this.request.assertHeader = new Assertives();
+        this.request.assertHeader.setAssertive(headAssert);
+
+        var assert:RequestKeeperAndDataAsserts = new RequestKeeperAndDataAsserts(this.request);
         return assert;
     }
 

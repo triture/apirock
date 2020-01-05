@@ -1,6 +1,5 @@
 package ;
 
-import apirock.types.RequestHeader;
 import apirock.ApiRock;
 
 class ApiRockTest {
@@ -16,36 +15,65 @@ class ApiRockTest {
             .sendQueryStringData('foo', 'far')
             .sendQueryStringData('hey', 'you')
             .mustPass()
-            .andMakeAsserts({args:{foo:['bar','far'], hey:'you', x:'0'}})
-        ;
+            .makeDataAsserts({args:{foo:['bar','far'], hey:'you', x:'0'}})
+        .then()
 
-        apirock.makeRequest('Send json data')
+        .makeRequest('Send json data')
             .POSTing('https://postman-echo.com/post')
             .sendQueryStringData('foo', 'bar')
             .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
             .mustPass()
-            .andMakeAsserts({args:{foo:'bar'},json:{foo:'bar'}})
-        ;
+            .makeDataAsserts({args:{foo:'bar'},json:{foo:'bar'}})
+        .then()
 
-        apirock.makeRequest('Send form data')
+        .makeRequest('Send form data')
             .POSTing('https://postman-echo.com/post')
             .sendingFormData('field_1', 'value_1')
             .sendingFormData('field_2', 'value_2')
             .sendingFormData('field_arr', '1')
             .sendingFormData('field_arr', '2')
             .mustPass()
-            .andMakeAsserts({form:{field_1:'value_1', field_2:'value_2', 'field_arr[]':['1', '2']}})
-        ;
-
-        apirock.makeRequest('Send raw data')
+            .makeDataAsserts({form:{field_1:'value_1', field_2:'value_2', 'field_arr[]':['1', '2']}})
+        .then()
+        
+        .makeRequest('Send raw data')
             .POSTing('https://postman-echo.com/post')
             .sendingRawData('raw data')
             .mustPass()
-            .andMakeAsserts({data:'raw data'})
-        ;
+            .makeDataAsserts({data:'raw data'})
+        .then()
+        
+        .makeRequest('Testing put method')
+            .PUTting('https://postman-echo.com/put')
+            .mustPass()
+            .makeDataAsserts({data:''})
+        .then()
 
+        .makeRequest('Testing patch method')
+            .PATCHing('https://postman-echo.com/patch')
+            .mustPass()
+            .makeDataAsserts({data:''})
+        .then()
+    
+        .makeRequest('Testing delete method')
+            .DELETing('https://postman-echo.com/delete')
+            .mustPass()
+            .makeDataAsserts({data:''})
+        .then()
+        
+        .makeRequest('Testing sending headers')
+            .GETting('https://postman-echo.com/headers')
+            .sendingHeader('my-header', 'header value')
+            .makeDataAsserts({headers:{'my-header': 'header value'}})
+        .then()
 
-        apirock.runTests();
+        .makeRequest('Testing received headers')
+            .GETting('https://postman-echo.com/response-headers')
+            .sendQueryStringData('foo', 'bar')
+            .makeHeadAsserts({foo:'bar'})
+        .then()
+
+        .runTests();
 
     }
 

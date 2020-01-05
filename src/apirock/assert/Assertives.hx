@@ -20,8 +20,8 @@ class Assertives {
     private var errors:Array<String> = [];
     private var map:Array<String> = [];
 
-    public function new(?activity:Activity) {
-        if (activity != null) activity.assertive = this;
+    public function new() {
+        
     }
 
     inline private function isString(value:Dynamic):Bool return new AnonStruct().valueString().validate_isString(value);

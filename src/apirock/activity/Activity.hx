@@ -1,6 +1,5 @@
 package apirock.activity;
 
-import apirock.assert.Assertives;
 import apirock.extensors.Keeper;
 import apirock.helper.ApiRockOut;
 
@@ -10,9 +9,6 @@ class Activity {
 
     @:allow(apirock.extensors.Keeper)
     private var keepList:Array<Keeper> = [];
-
-    @:allow(apirock.assert.Assertives)
-    private var assertive:Assertives = null;
 
     public function new(apirock:ApiRock) {
         this.apirock = apirock;
