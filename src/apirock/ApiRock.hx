@@ -1,5 +1,6 @@
 package apirock;
 
+import apirock.activity.ClearStringKeeperActivty;
 import apirock.activity.WaitActivity;
 import apirock.activity.WaitActivityMeasure;
 import apirock.activity.RequestActivity;
@@ -32,8 +33,14 @@ class ApiRock {
         this.activityStack.push(wait);
         return wait;
     }
+
+    public function clearStringKeeper():ClearStringKeeperActivty {
+        var clear:ClearStringKeeperActivty = new ClearStringKeeperActivty(this);
+        this.activityStack.push(clear);
+        return clear;
+    }
     
-    public function runTests():ApiRock {
+    public function runTests():Void {
 
         ApiRockOut.printTitle("Running APIProck " + this.name);
 
@@ -49,7 +56,7 @@ class ApiRock {
 
         if (this.errors.length == 0) {
 
-            ApiRockOut.printBox("DONE");
+            ApiRockOut.printBox("[green]DONE[/green]");
             Sys.exit(0);
 
         } else {
@@ -63,8 +70,6 @@ class ApiRock {
             Sys.exit(1);
 
         }
-
-        return this;
     }
 
 }
