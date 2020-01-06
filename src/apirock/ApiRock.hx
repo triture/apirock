@@ -1,6 +1,7 @@
 package apirock;
 
-import apirock.activity.ClearStringKeeperActivty;
+import apirock.activity.CustomActivity;
+import apirock.activity.ClearStringKeeperActivity;
 import apirock.activity.WaitActivity;
 import apirock.activity.WaitActivityMeasure;
 import apirock.activity.RequestActivity;
@@ -28,16 +29,22 @@ class ApiRock {
         return requester;
     }
     
-    public function waitFor(time:Int, measure:WaitActivityMeasure):WaitActivity {
+    public function waitFor(time:Int, ?measure:WaitActivityMeasure):WaitActivity {
         var wait:WaitActivity = new WaitActivity(this, time, measure == null ? WaitActivityMeasure.SECONDS : measure);
         this.activityStack.push(wait);
         return wait;
     }
 
-    public function clearStringKeeper():ClearStringKeeperActivty {
-        var clear:ClearStringKeeperActivty = new ClearStringKeeperActivty(this);
+    public function clearStringKeeper():ClearStringKeeperActivity {
+        var clear:ClearStringKeeperActivity = new ClearStringKeeperActivity(this);
         this.activityStack.push(clear);
         return clear;
+    }
+
+    public function customActivity(run:(String->Void)->Void):CustomActivity {
+        var custom:CustomActivity = new CustomActivity(this, run);
+        this.activityStack.push(custom);
+        return custom;
     }
     
     public function runTests():Void {
