@@ -265,6 +265,14 @@ class RequestActivity extends Activity {
 
         doRequest();
 
+        if (resultCode == 0) {
+            ApiRockOut.print('');
+            ApiRockOut.printBox('Cannot connect to the URL [red]${requestData.url}[/red]');
+            ApiRockOut.print('');
+
+            Sys.exit(300);
+        }
+
         this.resultData = output.getBytes().toString();
 
         #if debug

@@ -18,17 +18,20 @@ class ApiRockOut {
     }
 
     static public function printTitle(text:String):Void {
+        var clean:String = getCleanInfo(text);
+
         print(TAB);
         print(TAB + text.toUpperCase());
-        print(TAB + repeat("=", text.length));
+        print(TAB + repeat("=", clean.length));
         print(TAB);
     }
 
     static public function printBox(text:String):Void {
-        var len:Int = text.length + TAB.length * 2 + 2;
+        var clean:String = getCleanInfo(text);
+        var len:Int = clean.length + TAB.length * 2 + 2;
 
         var line:String = repeat("-", len);
-        var emptyLine:String = "|" + repeat(" ", TAB.length * 2 + text.length) + "|";
+        var emptyLine:String = "|" + repeat(" ", TAB.length * 2 + clean.length) + "|";
         var content:String = "|" + TAB + text + TAB + "|";
 
         print(TAB + line);
@@ -45,6 +48,14 @@ class ApiRockOut {
         info = info.split(yellow[0]).join(yellow[2]).split(yellow[1]).join(ccode);
 
         Sys.println(info);
+    }
+
+    static private function getCleanInfo(info:String):String {
+        info = info.split(red[0]).join('').split(red[1]).join('');
+        info = info.split(cyan[0]).join('').split(cyan[1]).join('');
+        info = info.split(green[0]).join('').split(green[1]).join('');
+        info = info.split(yellow[0]).join('').split(yellow[1]).join('');
+        return info;
     }
 
     static public function printList(data:Array<String>, tabs:Int):Void {
