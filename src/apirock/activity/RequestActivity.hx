@@ -523,7 +523,7 @@ private class RequestDataAndHeaders extends RequestKeeperAndAssertsAndExpectingA
         return this;
     }
 
-    public function sendQueryStringData(key:StringKeeper, value:StringKeeper):RequestDataAndHeaders {
+    public function sendingQueryStringData(key:StringKeeper, value:StringKeeper):RequestDataAndHeaders {
         if (this.request.requestDataQueryString == null) this.request.requestDataQueryString = [];
         this.request.requestDataQueryString.push({key:key, value:value});
         return this;
