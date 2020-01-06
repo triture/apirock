@@ -43,8 +43,9 @@ new ApiRock("Google Request")
 ```
 
 **makeRequest(why:StringKeeper)**
+
 Params | Description
----- | ----
+--- | ---
 why | Explain why you need this request
 
 ### Wait Activity
@@ -70,8 +71,9 @@ new ApiRock("Wait Test")
 ```
 
 **waitFor(time:Int, ?measure:WaitActivityMeasure)**
+
 Params | Description
----- | ----
+--- | ---
 time | The amount of time to wait
 measure | The unity of time. Can be Hour, Minutes or Seconds (***default***)
 
