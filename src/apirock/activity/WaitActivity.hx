@@ -26,6 +26,6 @@ class WaitActivity extends Activity {
             case _ : Sys.sleep(this.time);
         }
 
-        ApiRockOut.printWithTab('- Done', 1);
+        ApiRockOut.printWithTab('- Done', 2);
     }
 }

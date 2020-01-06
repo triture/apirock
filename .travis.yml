@@ -1,0 +1,15 @@
+language: haxe
+
+install:
+  - haxelib install hxcpp
+  - haxelib install datetime
+  - haxelib install utest
+  - haxelib install anonstruct
+  - haxelib dev apirock ./
+  - haxe apirock_tests.hxml
+
+script:
+  - neko build/apirock_utest.n
+  - neko build/apirock_test.n
+  - ./build/cpp/apirock_utest/ApiRockUnitTest
+  - ./build/cpp/apirock_test/ApiRockTest

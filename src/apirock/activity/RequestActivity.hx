@@ -3,7 +3,6 @@ package apirock.activity;
 import apirock.ApiRock;
 import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
-import apirock.types.RequestData;
 import apirock.helper.ApiRockOut;
 import anonstruct.AnonStruct;
 import apirock.assert.Assertives;
@@ -259,10 +258,8 @@ class RequestActivity extends Activity {
                 }
             }
 
-            http.onError = function(message:String):Void {
-
-            }
-
+            http.onError = function(message:String):Void {}
+            
             http.customRequest(true, output, requestData.method);
         }
 
@@ -555,4 +552,11 @@ private class RequestDataForm extends RequestKeeperAndAssertsAndExpectingAndMust
 private typedef KeyValue = {
     var key:StringKeeper;
     var value:StringKeeper;
+}
+
+private typedef RequestData = {
+    var url:String;
+    var method:String;
+    var data:String;
+    var headers:StringMap<String>;
 }
