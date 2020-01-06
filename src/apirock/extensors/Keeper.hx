@@ -1,10 +1,12 @@
 package apirock.extensors;
 
+import apirock.types.StringKeeper;
 import apirock.ApiRock;
 import apirock.helper.ApiRockOut;
 import haxe.ds.StringMap;
 import apirock.activity.Activity;
 
+@:access(apirock.types.StringKeeper)
 class Keeper {
     
     static private var keeperMap:StringMap<String> = new StringMap<String>();
@@ -19,6 +21,34 @@ class Keeper {
         this.activity = activity;
     }
 
+    private function drill(fields:Array<String>, data:Dynamic):Dynamic {
+        if (fields == null || fields.length == 0 || data == null) return data;
+
+        var field:String = fields.shift();
+
+        while (field == '') field = fields.shift();
+
+        // is asking for array ?
+        var regex:EReg = new EReg('\\[\\d+\\]$', '');
+        
+        if (regex.match(field)) {
+
+            var matched:String = regex.matched(0);
+            var field:String = regex.matchedLeft();
+
+            if (Reflect.hasField(data, field) && Std.is(Reflect.field(data, field), Array)) {
+                var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
+                var arrData:Array<Dynamic> = Reflect.field(data, field);
+
+                if (arrData.length > index) return drill(fields, arrData[index]);
+            }
+
+        } else if (Reflect.hasField(data, field)) return drill(fields, Reflect.field(data, field));
+        
+        return null;
+    }
+
+
     @:allow(apirock.activity.Activity)
     private function runKeeper(data:Dynamic, responseHeaders:Map<String, String>):Void {
 
@@ -26,33 +56,11 @@ class Keeper {
 
         if (this.isData) {
             // get data from result data
-
-            var tree:Array<String> = this.property.split(".");
-
             try {
-                if (data == null) throw "Data is null";
+                
+                dataFound = this.drill(this.property.split("."), data);
 
-                for (field in tree) {
-
-                    // if this is a numeric field, array value is expected
-                    if (Std.parseInt(field) != null && Std.is(dataFound, Array)) {
-
-                        var index:Int = Std.parseInt(field);
-                        var dataFoundArray:Array<Dynamic> = cast(dataFound, Array<Dynamic>);
-
-                        dataFound = dataFoundArray[index];
-
-                    } else {
-                        dataFound = Reflect.field(dataFound, field);
-                    }
-                }
-
-                if (dataFound == null) {
-                    // TODO: what to do in this situation??
-                    // maybe throw "NULL VALUE"
-                    // or set value as empty string
-                    dataFound = "";
-                }
+                if (dataFound == null) throw "Data is null";
 
             } catch (e:Dynamic) {
 
@@ -77,7 +85,7 @@ class Keeper {
 
         ApiRockOut.printWithTab('- Keeping ${this.property} in memory', 3);
 
-        Keeper.addData(this.key, Std.string(dataFound));
+        StringKeeper.addData(this.key, Std.string(dataFound));
     }
 
     public function keepingData(property:String, key:String):Keeper {
@@ -99,8 +107,5 @@ class Keeper {
     }
 
     public function then():ApiRock return this.activity.then();
-
-    static public function addData(key:String, value:String):Void keeperMap.set(key, value);
-    static public function getData(key:String):String return keeperMap.exists(key) ? keeperMap.get(key) : "";
 
 }
