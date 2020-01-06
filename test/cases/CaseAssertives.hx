@@ -89,10 +89,45 @@ class CaseAssertives extends Test {
         Assert.isFalse(a.compareValues(Date.fromString('2020-01-01'), Date.fromString('2019-01-01')));
 
     }
+    
+    function testArrayAccessToCompare() {
+        var a:Assertives = new Assertives();
+
+        var receivedData:Dynamic = {
+            a : 0,
+            b : [1, 2, 3],
+            c : [
+                {ca:0},
+                {ca:1},
+                {ca:2}
+            ]
+        }
+
+        Assert.isTrue(a.compareValues({
+            a : 0,
+            b : [1, 2, 3],
+            c : [
+                {ca:0},
+                {ca:1},
+                {ca:2}
+            ]
+        }, receivedData));
+
+        Assert.isTrue(a.compareValues({
+            a : 0,
+            'b[1]' : 2
+        }, receivedData));
+
+        Assert.isTrue(a.compareValues({
+            a : 0,
+            'c[1]' : {ca:1},
+            'c[2]' : {ca:2}
+        }, receivedData));
+    }
 
     function testCompareComplexValue() {
         var a:Assertives = new Assertives();
-        var ref:Dynamic = {
+        var receivedData:Dynamic = {
             a : 0,
             b : 'b',
             c : [
@@ -109,7 +144,7 @@ class CaseAssertives extends Test {
             }
         };
 
-        Assert.isTrue(a.compareValues(ref,  {
+        Assert.isTrue(a.compareValues({
             a : 0,
             b : 'b',
             c : [
@@ -124,10 +159,10 @@ class CaseAssertives extends Test {
                 d_a : null,
                 d_b : 'x'
             }
-        }
+        }, receivedData
         ));
 
-        Assert.isFalse(a.compareValues(ref,  {
+        Assert.isFalse(a.compareValues({
             a : 0,
             b : '',
             c : [
@@ -142,10 +177,10 @@ class CaseAssertives extends Test {
                 d_a : null,
                 d_b : 'x'
             }
-        }
+        }, receivedData
         ));
 
-        Assert.isFalse(a.compareValues(ref,  {
+        Assert.isFalse(a.compareValues({
             a : 0,
             b : 'b',
             c : [
@@ -160,10 +195,10 @@ class CaseAssertives extends Test {
                 d_a : null,
                 d_b : 'x'
             }
-        }
+        }, receivedData
         ));
 
-        Assert.isFalse(a.compareValues(ref, {
+        Assert.isFalse(a.compareValues({
             a : 0,
             b : 'b',
             c : [
@@ -175,7 +210,7 @@ class CaseAssertives extends Test {
                 d_a : null,
                 d_b : 'x'
             }
-        }
+        }, receivedData
         ));
 
     }

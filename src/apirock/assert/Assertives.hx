@@ -40,6 +40,11 @@ class Assertives {
         return this.compareValues(this.assertive, data);
     }
 
+    // IMPORTANT : 
+    // A = CHECK DATA (MUST HAVE THESE VALUES)
+    // B = DATA RECEIVED
+    // ALWAYS!
+
     private function compareTypes(a:Dynamic, b:Dynamic):Bool {
         if (a == null && b == null) return true;
         else if (this.isString(a) && this.isString(b)) return true;
@@ -177,28 +182,55 @@ class Assertives {
         var fieldsA:Array<String> = Reflect.fields(a);
         var fieldsB:Array<String> = Reflect.fields(b);
 
-        var hasErrors:Bool = false;
-
         for (field in fieldsA) {
             this.map.push(field);
 
-            if (fieldsB.indexOf(field) == -1) {
-                this.errors.push("Field " + this.map.join(".") + " not found");
-                hasErrors = true;
+            if (Reflect.hasField(a, field) && Reflect.hasField(b, field)) {
+                if (!this.compareValues(
+                    Reflect.field(a, field), 
+                    Reflect.field(b, field)
+                )) return false;
             } else {
+                // the field A has array access?
+                var regex:EReg = new EReg('\\[\\d+\\]$', '');
+                
+                if (regex.match(field)) {
 
-                var aValue:Dynamic = Reflect.field(a, field);
-                var bValue:Dynamic = Reflect.field(b, field);
+                    var matched:String = regex.matched(0);
+                    var arrField:String = regex.matchedLeft();
 
-                if (!this.compareValues(aValue, bValue)) {
-                    hasErrors = true;
+                    if (Reflect.hasField(b, arrField) && Std.is(Reflect.field(b, arrField), Array)) {
+                        var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
+                        var arrData:Array<Dynamic> = Reflect.field(b, arrField);
+                        
+                        if (arrData.length > index && !this.compareValues(
+                            Reflect.field(a, field), 
+                            arrData[index]
+                        )) return false;
+                    }
+                } else {
+                    this.errors.push("Field " + this.map.join(".") + " not found");
+                    return false;
                 }
-
             }
+
+            // if (fieldsB.indexOf(field) == -1) {
+            //     this.errors.push("Field " + this.map.join(".") + " not found");
+            //     return false;
+            // } else {
+
+            //     // var aValue:Dynamic = Reflect.field(a, field);
+            //     // var bValue:Dynamic = Reflect.field(b, field);
+
+            //     // if (!this.compareValues(aValue, bValue)) {
+            //     //     hasErrors = true;
+            //     // }
+
+            // }
 
             this.map.pop();
         }
 
-        return !hasErrors;
+        return true;
     }
 }
