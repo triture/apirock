@@ -123,6 +123,19 @@ class CaseAssertives extends Test {
             'c[1]' : {ca:1},
             'c[2]' : {ca:2}
         }, receivedData));
+
+        Assert.isTrue(a.compareValues({
+            a : 0,
+            'b[?]' : 2,
+            'b[?]' : 3,
+            'c[?]' : {ca:2}
+        }, receivedData));
+
+        Assert.isFalse(a.compareValues({
+            a : 0,
+            'b[?]' : 2,
+            'c[?]' : {ca:3}
+        }, receivedData));
     }
 
     function testCompareComplexValue() {
