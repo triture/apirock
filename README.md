@@ -37,11 +37,11 @@ new ApiRock("Postman Echo")                     // Create your test using 'Fluen
   * [Custom Activity](#custom-activity)
 * [StringKeeper](#stringkeeper)
 * [Request Tricks](#request-tricks)
-  * [Set Request Method](#1.-set-request-method)
-  * [Sending Data and Headers](#2.-sending-data-and-headers)
-  * [Expected Status Code](#3.-expected-status-code)
-  * [Validate Received Data](#4.-validate-received-data)
-  * [Keep Data](#5.-keep-data)
+  * [Set Request Method](#1-set-request-method)
+  * [Sending Data and Headers](#2-sending-data-and-headers)
+  * [Expected Status Code](#3-expected-status-code)
+  * [Validate Received Data](#4-validate-received-data)
+  * [Keep Data](#5-keep-data)
    
 
 ## Activities
@@ -132,11 +132,11 @@ todo
 
 There is 5 moments to create a good request test.
 
-    1. Set the request Method
-    2. Organize the data and headers to send
-    3. Tell if the request must be a *success*, *fail* or result a particular status code
-    4. Validate the received data and headers
-    5. Keep some data in memory for future requests
+1. Set the request Method
+2. Organize the data and headers to send
+3. Tell if the request must be a *success*, *fail* or result a particular status code
+4. Validate the received data and headers
+5. Keep some data in memory for future requests
 
 ### 1. Set Request Method
 
@@ -161,32 +161,26 @@ new ApiRock('Methods Tests')
 
 .makeRequest('Testing GET method')
     .GETting('http://localhost:8080/your/cool/api')
-    .mustPass()
 .then()
 
 .makeRequest('Testing POST method')
     .POSTing('http://localhost:8080/your/cool/api')
-    .mustPass()
 .then()
 
 .makeRequest('Testing DELETE method')
     .DELETing('http://localhost:8080/your/cool/api')
-    .mustPass()
 .then()
 
 .makeRequest('Testing PUT method')
     .PUTting('http://localhost:8080/your/cool/api')
-    .mustPass()
 .then()
 
 .makeRequest('Testing PATCH method')
     .PATCHing('http://localhost:8080/your/cool/api')
-    .mustPass()
 .then()
 
 .makeRequest('Testing OTHER method')
     .requesting('http://localhost:8080/your/cool/api', 'OTHER')
-    .mustPass()
 .then()
 
 .runTests();
@@ -289,10 +283,169 @@ If you want to send raw data, use this method. The default `content-type` for th
 ```
 
 ### 3. Expected Status Code
-todo
+
+**mustPass()**
+
+This is the default expected status code. ApiRock consider a `SUCCESS` any status code from 200 to 299.
+
+**mustFail()**
+
+ApiRock consider a `FAILURE` any status code above 300.
+
+**mustDoCode(?code:Int = 200)**
+
+ApiRock expects the exact status `code`.
+
+```haxe
+.makeRequest('Testing status code SUCCESS')
+    .GETting('https://postman-echo.com/status/200')
+    .mustPass()
+.then()
+
+.makeRequest('Testing status code FAIL')
+    .GETting('https://postman-echo.com/status/300')
+    .mustFail()
+.then()
+
+.makeRequest('Testing specific status code')
+    .GETting('https://postman-echo.com/status/502')
+    .mustDoCode(502)
+.then()
+```
 
 ### 4. Validate Received Data
+
+#### 4.1 Validate received headers
+
+```haxe
+.makeRequest('Testing received headers')
+    .GETting('https://postman-echo.com/response-headers')
+    .makeHeadAsserts({'content-type':'application/json; charset=utf-8'})
+.then()
+```
+
+#### 4.2 Validate data structure
 todo
+
+#### 4.2 Validate Data
+
+There is a lot of way to make data asserts using ApiRock.
+
+Assume that the GET request to http://localhost:8080/user returns JSON as:
+
+    {
+        "name" : "John Smith",
+        "age" : 37,
+        "cars": [
+            { "name" : "Ford", 
+                "models" : [
+                    {"name":"Fiesta", "colors":["Pearl", "Silver"]},
+                    {"name":"Focus", "colors":["Blue", "Black"]},
+                    {"name":"Mustang", "colors":["Silver", "Blue"]}
+                ]
+            },
+            { "name" : "BMW", 
+                "models" : [
+                    {"name":"320", "colors":["Bright Yellow"]},
+                    {"name":"X3", "colors":["Titan Silver"]},
+                    {"name":"X5", "colors":["Black", "Beige"]}
+                ]
+            },
+            { "name" : "Fiat", 
+                "models" : [
+                    {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
+                    {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
+                ]
+            }
+        ]
+    }
+
+
+Test if `name` is `"John Smith"` and `age` is `37`.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        {
+            age : 37,
+            name : "John Smith"
+        }
+    )
+.then()
+```
+
+Test if `cars` has all the expected values.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        "cars": [
+            { "name" : "Ford", 
+                "models" : [
+                    {"name":"Fiesta", "colors":["Pearl", "Silver"]},
+                    {"name":"Focus", "colors":["Blue", "Black"]},
+                    {"name":"Mustang", "colors":["Silver", "Blue"]}
+                ]
+            },
+            { "name" : "BMW", 
+                "models" : [
+                    {"name":"320", "colors":["Bright Yellow"]},
+                    {"name":"X3", "colors":["Titan Silver"]},
+                    {"name":"X5", "colors":["Black", "Beige"]}
+                ]
+            },
+            { "name" : "Fiat", 
+                "models" : [
+                    {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
+                    {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
+                ]
+            }
+        ]
+    )
+.then()
+```
+
+Test if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM`.
+Also test fi `cars[2]` has `name` equals to `Fiat`.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        "cars[1]" : {"name":"BMW"},
+        "cars[2]" : {"name":"Fiat"}
+    )
+.then()
+```
+
+Test if the first model (`model[0]`) of the first car (`car[0]`) has the `name` equals to `Fiesta`.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        "cars[0]" : {"models[0]" : {"name": "Fiesta"}}
+    )
+.then()
+```
+
+Test if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        "cars[?]" : {"name":"Fiat"}
+    )
+.then()
+``` 
+
+Test if there is any `model` of any `cars` with `Ivory` value at index 1 of `colors` array.
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/user')
+    .makeHeadAsserts(
+        "cars[?]" : {"models[?]": {"colors[1]":"Ivory"}}
+    )
+.then()
+``` 
 
 ### 5. Keep Data
 todo

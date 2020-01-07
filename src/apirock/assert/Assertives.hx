@@ -16,11 +16,14 @@ class Assertives {
 
     private var assertive:Dynamic;
     private var errors:Array<String> = [];
-    private var map:Array<String> = [];
+
+    private var trackErrors:Bool = true;
 
     public function new() {
         
     }
+
+    private function addError(message:String):Void if (trackErrors) this.errors.push(message);
 
     inline private function isString(value:Dynamic):Bool return new AnonStruct().valueString().validate_isString(value);
     inline private function isInt(value:Dynamic):Bool return new AnonStruct().valueInt().validate_isInt(value);
@@ -31,12 +34,11 @@ class Assertives {
     inline private function isObject(value:Dynamic):Bool return new AnonStruct().valueObject().validate_isObject(value);
 
     public function getErrors():Array<String> return this.errors.copy();
-
+    
     public function setAssertive(value:Dynamic) this.assertive = value;
 
     public function compare(data:Dynamic):Bool {
         this.errors = [];
-        this.map = [];
         return this.compareValues(this.assertive, data);
     }
 
@@ -45,7 +47,10 @@ class Assertives {
     // B = DATA RECEIVED
     // ALWAYS!
 
-    private function compareTypes(a:Dynamic, b:Dynamic):Bool {
+    private function compareTypes(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
+
+        if (map == null) map = [];
+
         if (a == null && b == null) return true;
         else if (this.isString(a) && this.isString(b)) return true;
         else if (this.isInt(a) && this.isInt(b)) return true;
@@ -62,29 +67,31 @@ class Assertives {
 
             } else {
 
-                if (this.map.length > 0) this.errors.push("Wrong type for " + this.map.join("."));
-                else this.errors.push("Values are not same type");
+                if (map.length > 0) this.addError("Wrong type for " + map.join("."));
+                else this.addError("Values are not same type");
 
                 return false;
             }
         }
     }
 
-    private function compareValues(a:Dynamic, b:Dynamic):Bool {
+    private function compareValues(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
 
-        if (this.compareTypes(a, b)) {
+        if (map == null) map = [];
+
+        if (this.compareTypes(a, b, map)) {
             
             if (a == null) return a == b;
-            else if (this.isString(a) && this.isString(b)) return this.compareStrings(a, b);
-            else if (this.isInt(a) && this.isInt(b)) return this.compareInts(a, b);
+            else if (this.isString(a) && this.isString(b)) return this.compareStrings(a, b, map);
+            else if (this.isInt(a) && this.isInt(b)) return this.compareInts(a, b, map);
             else if (this.isFloat(a) && this.isFloat(b)) return this.compareFloats(a, b);
-            else if (this.isBool(a) && this.isBool(b)) return this.compareBools(a, b);
-            else if (this.isArray(a) && this.isArray(b)) return this.compareArrays(a, b);
-            else if (this.isDate(a) && this.isDate(b)) return this.compareDates(a, b);
-            else if (this.isObject(a) && this.isObject(b)) return this.compareObjects(a, b);
+            else if (this.isBool(a) && this.isBool(b)) return this.compareBools(a, b, map);
+            else if (this.isArray(a) && this.isArray(b)) return this.compareArrays(a, b, map);
+            else if (this.isDate(a) && this.isDate(b)) return this.compareDates(a, b, map);
+            else if (this.isObject(a) && this.isObject(b)) return this.compareObjects(a, b, map);
             else {
 
-                this.errors.push("Unable to identify types");
+                this.addError("Unable to identify types");
 
                 return false;
             }
@@ -92,18 +99,21 @@ class Assertives {
         } else return false;
     }
 
-    private function addErrorValue(expected:Dynamic, gets:Dynamic):Void {
+    private function addErrorValue(expected:Dynamic, gets:Dynamic, ?map:Array<String>):Void {
+
+        if (map == null) map = [];
+
         var error:String = "";
         error += "Wrong value";
 
-        if (this.map.length > 0) error += " for " + this.map.join(".");
+        if (map.length > 0) error += " for " + map.join(".");
 
         error += ": Expects '" + Std.string(expected) + "' and Gets '" + Std.string(gets) + "'";
 
-        this.errors.push(error);
+        this.addError(error);
     }
 
-    private function compareDates(a:Dynamic, b:Dynamic):Bool {
+    private function compareDates(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
         var aString:String = '';
         var bString:String = '';
 
@@ -133,58 +143,70 @@ class Assertives {
         else return aString == bString;
     }
 
-    private function compareStrings(a:String, b:String):Bool {
+    private function compareStrings(a:String, b:String, ?map:Array<String>):Bool {
         if (a == b) return true;
         else {
-            this.addErrorValue(a, b);
-            return false;
-        }
-    }
-    private function compareInts(a:Int, b:Int):Bool {
-        if (a == b) return true;
-        else {
-            this.addErrorValue(a, b);
-            return false;
-        }
-    }
-    private function compareBools(a:Bool, b:Bool):Bool {
-        if (a == b) return true;
-        else {
-            this.addErrorValue(a, b);
-            return false;
-        }
-    }
-    private function compareFloats(a:Float, b:Float):Bool {
-        if (Math.abs(a - b) < 0.0001) return true;
-        else {
-            this.addErrorValue(a, b);
+            this.addErrorValue(a, b, map);
             return false;
         }
     }
 
-    private function compareArrays(a:Array<Dynamic>, b:Array<Dynamic>):Bool {
+    private function compareInts(a:Int, b:Int, ?map:Array<String>):Bool {
+        if (a == b) return true;
+        else {
+            this.addErrorValue(a, b, map);
+            return false;
+        }
+    }
+
+    private function compareBools(a:Bool, b:Bool, ?map:Array<String>):Bool {
+        if (a == b) return true;
+        else {
+            this.addErrorValue(a, b, map);
+            return false;
+        }
+    }
+
+    private function compareFloats(a:Float, b:Float, ?map:Array<String>):Bool {
+        if (Math.abs(a - b) < 0.0001) return true;
+        else {
+            this.addErrorValue(a, b, map);
+            return false;
+        }
+    }
+
+    private function compareArrays(a:Array<Dynamic>, b:Array<Dynamic>, ?map:Array<String>):Bool {
+
+        if (map == null) map = [];
+
         if (a.length == b.length) {
 
             for (i in 0 ... a.length) {
-                this.map.push("[" + i + "]");
-                if (!this.compareValues(a[i], b[i])) return false;
-                this.map.pop();
+                map.push("[" + i + "]");
+                
+                if (!this.compareValues(a[i], b[i], map)) return false;
+
+                map.pop();
             }
 
             return true;
+
         } else {
-            this.errors.push("Arrays have wrong length at " + this.map.join("."));
+            this.addError("Arrays have wrong length at " + map.join("."));
             return false;
         }
     }
 
-    private function compareObjects(a:Dynamic, b:Dynamic):Bool {
+    private function compareObjects(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
+
+        if (map == null) map = [];
+
         var fieldsA:Array<String> = Reflect.fields(a);
         
         var regex:EReg = new EReg('\\[\\d+\\]$', '');
 
         for (field in fieldsA) {
-            this.map.push(field);
+            map.push(field);
 
             if (Reflect.hasField(a, field) && Reflect.hasField(b, field)) {
                 if (!this.compareValues(
@@ -200,17 +222,25 @@ class Assertives {
                     
                     var itemFound:Bool = false;
 
+                    var tempErrors:Array<String> = this.errors;
+                    this.errors = [];
+
                     for (item in arrData) {
-                        if (this.compareValues(currData, item)) {
+                        if (this.compareValues(currData, item, [])) {
                             itemFound = true;
                             break;
                         }
                     }
 
-                    if (!itemFound) return false;
+                    this.errors = tempErrors;
+
+                    if (!itemFound) {
+                        this.addError('${map.join(".")} doesnt have the value ${Std.string(currData)}');
+                        return false;
+                    }
                     
                 } else {
-                    this.errors.push("Field " + this.map.join(".") + " not found");
+                    this.addError("Field " + map.join(".") + " not found");
                     return false;
                 }
 
@@ -227,9 +257,12 @@ class Assertives {
                         Reflect.field(a, field), 
                         arrData[index]
                     )) return false;
+                } else {
+                    this.addError("Field " + map.join(".") + " not found");
+                    return false;
                 }
             } else {
-                this.errors.push("Field " + this.map.join(".") + " not found");
+                this.addError("Field " + map.join(".") + " not found");
                 return false;
             }
 
@@ -247,7 +280,7 @@ class Assertives {
 
             // }
 
-            this.map.pop();
+            map.pop();
         }
 
         return true;

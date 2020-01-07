@@ -18,12 +18,57 @@ class ApiRockTest {
             .makeDataAsserts({args:{foo:['bar','far'], hey:'you', x:'0'}})
         .then()
 
-        .makeRequest('Send json data')
+        // .makeRequest('Send json data')
+        //     .POSTing('https://postman-echo.com/post')
+        //     .sendingQueryStringData('foo', 'bar')
+        //     .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
+        //     .mustPass()
+        //     .makeDataAsserts({args:{foo:'bar'},json:{foo:'bar'}})
+        // .then()
+
+        .makeRequest('Send complex json data')
             .POSTing('https://postman-echo.com/post')
-            .sendingQueryStringData('foo', 'bar')
-            .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
+            .sendingJsonData(haxe.Json.stringify(
+                {
+                    "name" : "John Smith",
+                    "age" : 37,
+                    "cars": [
+                        { "name" : "Ford", 
+                            "models" : [
+                                {"name":"Fiesta", "colors":["Pearl", "Silver"]},
+                                {"name":"Focus", "colors":["Blue", "Black"]},
+                                {"name":"Mustang", "colors":["Silver", "Blue"]}
+                            ]
+                        },
+                        { "name" : "BMW", 
+                            "models" : [
+                                {"name":"320", "colors":["Bright Yellow"]},
+                                {"name":"X3", "colors":["Titan Silver"]},
+                                {"name":"X5", "colors":["Black", "Beige"]}
+                            ]
+                        },
+                        { "name" : "Fiat", 
+                            "models" : [
+                                {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
+                                {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
+                            ]
+                        }
+                    ]
+                }
+            ))
             .mustPass()
-            .makeDataAsserts({args:{foo:'bar'},json:{foo:'bar'}})
+            .makeDataAsserts(
+                {
+                    json : {
+                        age : 37,
+                        name : "John Smith",
+                        "cars[1]" : {"name":"BMW"},
+                        "cars[0]" : {"models[0]" : {"name": "Fiesta"}},
+                        "cars[?]" : {"models[?]": {"colors[1]":"Ivory"}},
+                        "cars[?]" : {"name":"Fiat"}
+                    }
+                }
+            )
         .then()
 
         .makeRequest('Send form data')
@@ -72,7 +117,7 @@ class ApiRockTest {
             .GETting('https://postman-echo.com/response-headers')
             .sendingQueryStringData('foo', 'bar')
             .mustPass()
-            .makeHeadAsserts({foo:'bar'})
+            .makeHeadAsserts({foo:'bar', 'content-type':'application/json; charset=utf-8'})
         .then()
 
         .makeRequest('Failing a basic authentication')
@@ -87,6 +132,21 @@ class ApiRockTest {
             .sendingBasicAUTH('postman', 'password')
             .mustPass()
             .makeDataAsserts({authenticated:true})
+        .then()
+
+        .makeRequest('Testing status code SUCCESS')
+            .GETting('https://postman-echo.com/status/200')
+            .mustPass()
+        .then()
+
+        .makeRequest('Testing status code FAIL')
+            .GETting('https://postman-echo.com/status/300')
+            .mustFail()
+        .then()
+
+        .makeRequest('Testing specific status code')
+            .GETting('https://postman-echo.com/status/502')
+            .mustDoCode(502)
         .then()
 
         .runTests();
