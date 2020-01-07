@@ -327,11 +327,11 @@ ApiRock expects the exact status `code`.
 #### 4.2 Validate data structure
 todo
 
-#### 4.2 Validate Data
+#### 4.3 Validate Data
 
 There is a lot of way to make data asserts using ApiRock.
 
-Assume that the GET request to http://localhost:8080/user returns JSON as:
+Assume that the GET request to http://localhost:8080/user/cars returns JSON as:
 
     {
         "name" : "John Smith",
@@ -361,11 +361,11 @@ Assume that the GET request to http://localhost:8080/user returns JSON as:
     }
 
 
-Test if `name` is `"John Smith"` and `age` is `37`.
+Test if `name` is `"John Smith"` and `age` is `37`:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         {
             age : 37,
             name : "John Smith"
@@ -374,11 +374,11 @@ Test if `name` is `"John Smith"` and `age` is `37`.
 .then()
 ```
 
-Test if `cars` has all the expected values.
+Test if `cars` has all the expected values:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         "cars": [
             { "name" : "Ford", 
                 "models" : [
@@ -405,43 +405,42 @@ Test if `cars` has all the expected values.
 .then()
 ```
 
-Test if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM`.
-Also test fi `cars[2]` has `name` equals to `Fiat`.
+Test if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM` and test if `cars[2]` has `name` equals to `Fiat`:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         "cars[1]" : {"name":"BMW"},
         "cars[2]" : {"name":"Fiat"}
     )
 .then()
 ```
 
-Test if the first model (`model[0]`) of the first car (`car[0]`) has the `name` equals to `Fiesta`.
+Test if the first model (`model[0]`) of the first car (`car[0]`) has the `name` equals to `Fiesta`:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         "cars[0]" : {"models[0]" : {"name": "Fiesta"}}
     )
 .then()
 ```
 
-Test if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`.
+Test if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         "cars[?]" : {"name":"Fiat"}
     )
 .then()
 ``` 
 
-Test if there is any `model` of any `cars` with `Ivory` value at index 1 of `colors` array.
+Test if there is any `model` of any `cars` with `Ivory` value at index 1 of `colors` array:
 ```haxe
 .makeRequest('Asserting Data')
-    .GETting('http://localhost:8080/user')
-    .makeHeadAsserts(
+    .GETting('http://localhost:8080/user/cars')
+    .makeDataAsserts(
         "cars[?]" : {"models[?]": {"colors[1]":"Ivory"}}
     )
 .then()
