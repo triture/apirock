@@ -129,18 +129,164 @@ new ApiRock('Custom Test')
 todo
 
 ## Request Tricks
+
 There is 5 moments to create a good request test.
-1. Set the request Method
-2. Organize the data and headers to send
-3. Tell if the request must be a Success, Fail or result a particular status code
-4. Validate the received data and headers
-5. Keep some data in memory for future requests
+
+    1. Set the request Method
+    2. Organize the data and headers to send
+    3. Tell if the request must be a *success*, *fail* or result a particular status code
+    4. Validate the received data and headers
+    5. Keep some data in memory for future requests
 
 ### 1. Set Request Method
-todo
+
+You can choose one of those 5 predefined methods...
+
+**POSTing(url:StringKeeper)**
+
+**GETting(url:StringKeeper)**
+
+**DELETing(url:StringKeeper)**
+
+**PUTting(url:StringKeeper)**
+
+**PATCHing(url:StringKeeper)**
+
+... or write your own using this:
+
+**requesting(url:StringKeeper, method:StringKeeper)**
+
+```haxe
+new ApiRock('Methods Tests')
+
+.makeRequest('Testing GET method')
+    .GETting('http://localhost:8080/your/cool/api')
+    .mustPass()
+.then()
+
+.makeRequest('Testing POST method')
+    .POSTing('http://localhost:8080/your/cool/api')
+    .mustPass()
+.then()
+
+.makeRequest('Testing DELETE method')
+    .DELETing('http://localhost:8080/your/cool/api')
+    .mustPass()
+.then()
+
+.makeRequest('Testing PUT method')
+    .PUTting('http://localhost:8080/your/cool/api')
+    .mustPass()
+.then()
+
+.makeRequest('Testing PATCH method')
+    .PATCHing('http://localhost:8080/your/cool/api')
+    .mustPass()
+.then()
+
+.makeRequest('Testing OTHER method')
+    .requesting('http://localhost:8080/your/cool/api', 'OTHER')
+    .mustPass()
+.then()
+
+.runTests();
+```
 
 ### 2. Sending Data and Headers
-todo
+After set up your URL and request method, add some data to request.
+
+**sendingHeader(head:StringKeeper, value:StringKeeper)**
+
+Add headers to you request:
+
+```haxe
+new ApiRock('Send Header Tests')
+
+.makeRequest('Testing sending headers')
+    .GETting('https://postman-echo.com/headers')
+    .sendingHeader('foo1', 'bar1')
+    .sendingHeader('foo2', 'bar2')
+.then()
+
+.runTests();
+```
+
+> BONUS: The method sendingBasicAUTH adds
+> an special header following the Basic AUTH rules:
+> https://en.wikipedia.org/wiki/Basic_access_authentication
+
+```haxe
+.makeRequest('Testing basic authentication')
+    .GETting('https://postman-echo.com/basic-auth')
+    .sendingBasicAUTH('postman', 'password')
+.then()
+```
+
+**sendingQueryStringData(key:StringKeeper, value:StringKeeper)**
+
+Add query string data:
+
+```haxe
+apirock.makeRequest('Get a simple request')
+    .GETting('https://postman-echo.com/get')
+    .sendingQueryStringData('foo', 'bar value')       // This will append '?foo=bar%20value' to URL.
+.then()                                               // Complete URL: https://postman-echo.com/get?foo=bar%20value
+
+apirock.makeRequest('Get a simple request')
+    .GETting('https://postman-echo.com/get?x=0')      // Combine query parameter at url are allowed.
+    .sendingQueryStringData('y', '5')                 // This will append '&y=5&z=3' to URL.
+    .sendingQueryStringData('z', '3')                 // Complete URL: https://postman-echo.com/get?x=0&y=5&z=3
+.then()
+
+apirock.makeRequest('Get a simple request')
+    .GETting('https://postman-echo.com/get')          // If you repeat the same key name, it will be converted to an array
+    .sendingQueryStringData('arr', '5')               // This will append '?arr[]=5&arr[]=3' to URL.
+    .sendingQueryStringData('arr', '3')               // Complete URL: https://postman-echo.com/get?arr[]=5&arr[]=3
+.then()
+
+```
+
+There is 3 methods to include request body data. You can choose only one of them per request:
+
+**sendingFormData(fieldName:StringKeeper, fieldValue:StringKeeper)**
+
+Send value as form field values. If you don't set any `content-type` header, ApiRock sends automatically the value `application/x-www-form-urlencoded`.
+
+```haxe
+.makeRequest('Send form data')
+    .POSTing('https://postman-echo.com/post')
+    .sendingFormData('foo1', 'bar1')                   // The request body will be 'foo1=bar1&foo2=bar2'
+    .sendingFormData('foo2', 'bar2')
+.then()
+
+.makeRequest('Send form data')
+    .POSTing('https://postman-echo.com/post')          // If you repeat the same key name, it will be converted to an array
+    .sendingFormData('foo', 'bar1')                    // The request body will be 'foo[]=bar1&foo[]=bar2'
+    .sendingFormData('foo', 'bar2')
+.then()
+```
+
+**sendingJsonData(data:StringKeeper)**
+
+Send the value as Json. If you don't set any `content-type` header, ApiRock sends automatically the value `application/json`.
+
+```haxe
+.makeRequest('Send json data')
+    .POSTing('https://postman-echo.com/post')
+    .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
+.then()
+```
+
+**sendingRawData(data:StringKeeper, ?contentType:StringKeeper = 'text/plain')**
+
+If you want to send raw data, use this method. The default `content-type` for this method is `text/plain`.
+
+```haxe
+.makeRequest('Send raw data')
+    .POSTing('https://postman-echo.com/post')
+    .sendingRawData('raw data')
+.then()
+```
 
 ### 3. Expected Status Code
 todo

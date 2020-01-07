@@ -24,6 +24,7 @@ class RequestActivity extends Activity {
     private var requestMethod:StringKeeper = 'GET';
     private var requestHedader:Array<KeyValue> = [];
     private var requestDataRaw:StringKeeper;
+    private var requestDataRawContentType:StringKeeper;
     private var requestDataJson:StringKeeper;
     private var requestDataForm:Array<KeyValue>;
     private var requestDataQueryString:Array<KeyValue>;
@@ -95,7 +96,7 @@ class RequestActivity extends Activity {
         var dataContentType:String = 'application/x-www-form-urlencoded';
         if (this.requestDataRaw != null) {
             data = this.requestDataRaw.toString();
-            dataContentType = 'text/plain';
+            dataContentType = this.requestDataRawContentType.toString();
         } else if (this.requestDataForm != null) data = this.helperGenerateUrlEncodedData(this.requestDataForm);
         else if (this.requestDataJson != null) {
             data = this.requestDataJson.toString();
@@ -398,19 +399,19 @@ class RequestActivity extends Activity {
         return subIndex;
     }
 
-    public function requesting(url:StringKeeper, method:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders {
+    public function requesting(url:StringKeeper, method:StringKeeper):RequestDataAndHeaders {
         this.requestUrl = url;
         this.requestMethod = method;
-        this.runBefore = runBefore;
+        this.runBefore = null;
 
         return new RequestDataAndHeaders(this);
     }
 
-    public function POSTing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'POST', runBefore);
-    public function GETting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'GET', runBefore);
-    public function DELETing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'DELETE', runBefore);
-    public function PUTting(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'PUT', runBefore);
-    public function PATCHing(url:StringKeeper, ?runBefore:Void->Void):RequestDataAndHeaders return this.requesting(url, 'PATCH', runBefore);
+    public function POSTing(url:StringKeeper):RequestDataAndHeaders return this.requesting(url, 'POST');
+    public function GETting(url:StringKeeper):RequestDataAndHeaders return this.requesting(url, 'GET');
+    public function DELETing(url:StringKeeper):RequestDataAndHeaders return this.requesting(url, 'DELETE');
+    public function PUTting(url:StringKeeper):RequestDataAndHeaders return this.requesting(url, 'PUT');
+    public function PATCHing(url:StringKeeper):RequestDataAndHeaders return this.requesting(url, 'PATCH');
     
 }
 
@@ -534,8 +535,10 @@ private class RequestDataAndHeaders extends RequestKeeperAndAssertsAndExpectingA
         return this;
     }
 
-    public function sendingRawData(data:StringKeeper):RequestKeeperAndAssertsAndExpectingAndMusts {
+    public function sendingRawData(data:StringKeeper, ?contentType:StringKeeper = 'text/plain'):RequestKeeperAndAssertsAndExpectingAndMusts {
+        if (contentType == null || contentType.toString().length == 0) contentType = 'text/plain';
         this.request.requestDataRaw = data;
+        this.request.requestDataRawContentType = contentType;
         return this;
     }
 
