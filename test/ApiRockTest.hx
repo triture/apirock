@@ -1,5 +1,6 @@
 package ;
 
+import anonstruct.AnonStruct;
 import apirock.ApiRock;
 
 class ApiRockTest {
@@ -18,13 +19,26 @@ class ApiRockTest {
             .makeDataAsserts({args:{foo:['bar','far'], hey:'you', x:'0'}})
         .then()
 
-        // .makeRequest('Send json data')
-        //     .POSTing('https://postman-echo.com/post')
-        //     .sendingQueryStringData('foo', 'bar')
-        //     .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
-        //     .mustPass()
-        //     .makeDataAsserts({args:{foo:'bar'},json:{foo:'bar'}})
-        // .then()
+        .makeRequest('Send json data')
+            .POSTing('https://postman-echo.com/post')
+            .sendingQueryStringData('foo', 'bar')
+            .sendingJsonData(haxe.Json.stringify({foo:'bar'}))
+            .mustPass()
+            .makeDataAsserts({args:{foo:'bar'},json:{foo:'bar'}})
+        .then()
+
+        .makeRequest('Test AnonStruct')
+            .POSTing('https://postman-echo.com/post')
+            .sendingJsonData(haxe.Json.stringify(
+                {
+                    "name" : "John Smith",
+                    "email" : "john.smith@some.domain",
+                    "birthday" : "1982-04-04"
+                }
+            ))
+            .mustPass()
+            .expecting(ValidateUserProfile)
+        .then()
 
         .makeRequest('Send complex json data')
             .POSTing('https://postman-echo.com/post')
@@ -153,4 +167,37 @@ class ApiRockTest {
 
     }
 
+}
+
+/**
+ * 
+ * {
+    "name" : "John Smith",
+    "email" : "john.smith@some.domain",
+    "birthday" : "04/04/1982"
+}
+ */
+
+private class ValidateUserProfile extends AnonStruct {
+    public function new() {
+
+        super();
+
+        var struct:AnonStruct = new AnonStruct();
+        
+        struct.propertyString('name')
+            .refuseEmpty()
+            .refuseNull();
+
+        struct.propertyString('email')
+            .refuseEmpty()
+            .refuseNull();
+        
+        struct.propertyDate('birthday')
+            .refuseNull();
+        
+        this.propertyObject('json')
+            .refuseNull()
+            .setStruct(struct);
+    }
 }

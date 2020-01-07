@@ -325,7 +325,49 @@ ApiRock expects the exact status `code`.
 ```
 
 #### 4.2 Validate data structure
-todo
+
+ApiRock uses AnonStruct lib to validate response data. 
+
+> **More Info:**
+> - https://github.com/triture/anonstruct
+> - https://lib.haxe.org/p/AnonStruct/
+
+Assume that the GET request to http://localhost:8080/user/profile returns JSON as:
+
+    {
+        "name" : "John Smith",
+        "email" : "john.smith@some.domain",
+        "birthday" : "04/04/1982"
+    }
+
+If you need to test only the data structure (not the values), first you need create a new [AnonStruct](https://github.com/triture/anonstruct) validator class:
+```haxe
+private class ValidateUserProfile extends AnonStruct {
+    public function new() {
+        super();
+
+        this.propertyString('name')
+            .refuseEmpty()
+            .refuseNull();
+
+        this.propertyString('email')
+            .refuseEmpty()
+            .refuseNull();
+        
+        this.propertyDate('birthday')
+            .refuseNull();
+    }
+}
+```
+
+... and then pass the Class reference to `expecting(anon:Class<AnonStruct>)` method:
+```haxe
+.makeRequest('Test AnonStruct')
+    .GETting('http://localhost:8080/user/profile')
+    .mustPass()
+    .expecting(ValidateUserProfile)
+.then()
+```
 
 #### 4.3 Validate Data
 
