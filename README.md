@@ -42,6 +42,7 @@ new ApiRock("Postman Echo")                     // Create your test using 'Fluen
   * [Expected Status Code](#3-expected-status-code)
   * [Validate Received Data](#4-validate-received-data)
   * [Keep Data](#5-keep-data)
+* [More Examples](#more-examples)
    
 
 ## Activities
@@ -334,11 +335,13 @@ ApiRock uses AnonStruct lib to validate response data.
 
 Assume that the GET request to http://localhost:8080/user/profile returns JSON as:
 
-    {
-        "name" : "John Smith",
-        "email" : "john.smith@some.domain",
-        "birthday" : "04/04/1982"
-    }
+```json
+{
+    "name" : "John Smith",
+    "email" : "john.smith@some.domain",
+    "birthday" : "04/04/1982"
+}
+```
 
 If you need to test only the data structure (not the values), first you need create a new [AnonStruct](https://github.com/triture/anonstruct) validator class:
 ```haxe
@@ -375,35 +378,36 @@ There is a lot of way to make data asserts using ApiRock.
 
 Assume that the GET request to http://localhost:8080/user/cars returns JSON as:
 
-    {
-        "name" : "John Smith",
-        "age" : 37,
-        "cars": [
-            { "name" : "Ford", 
-                "models" : [
-                    {"name":"Fiesta", "colors":["Pearl", "Silver"]},
-                    {"name":"Focus", "colors":["Blue", "Black"]},
-                    {"name":"Mustang", "colors":["Silver", "Blue"]}
-                ]
-            },
-            { "name" : "BMW", 
-                "models" : [
-                    {"name":"320", "colors":["Bright Yellow"]},
-                    {"name":"X3", "colors":["Titan Silver"]},
-                    {"name":"X5", "colors":["Black", "Beige"]}
-                ]
-            },
-            { "name" : "Fiat", 
-                "models" : [
-                    {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
-                    {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
-                ]
-            }
-        ]
-    }
+```json
+{
+    "name" : "John Smith",
+    "age" : 37,
+    "cars": [
+        { "name" : "Ford", 
+            "models" : [
+                {"name":"Fiesta", "colors":["Pearl", "Silver"]},
+                {"name":"Focus", "colors":["Blue", "Black"]},
+                {"name":"Mustang", "colors":["Silver", "Blue"]}
+            ]
+        },
+        { "name" : "BMW", 
+            "models" : [
+                {"name":"320", "colors":["Bright Yellow"]},
+                {"name":"X3", "colors":["Titan Silver"]},
+                {"name":"X5", "colors":["Black", "Beige"]}
+            ]
+        },
+        { "name" : "Fiat", 
+            "models" : [
+                {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
+                {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
+            ]
+        }
+    ]
+}
+```
 
-
-Test if `name` is `"John Smith"` and `age` is `37`:
+Tests if `name` is `"John Smith"` and `age` is `37`:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -416,7 +420,7 @@ Test if `name` is `"John Smith"` and `age` is `37`:
 .then()
 ```
 
-Test if `cars` has all the expected values:
+Tests if `cars` has all the expected values:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -447,7 +451,7 @@ Test if `cars` has all the expected values:
 .then()
 ```
 
-Test if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM` and test if `cars[2]` has `name` equals to `Fiat`:
+Tests if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM` and test if `cars[2]` has `name` equals to `Fiat`:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -458,7 +462,7 @@ Test if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BWM
 .then()
 ```
 
-Test if the first model (`model[0]`) of the first car (`car[0]`) has the `name` equals to `Fiesta`:
+Tests if the first model (`model[0]`) of the first car (`car[0]`) has the `name` equals to `Fiesta`:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -468,7 +472,7 @@ Test if the first model (`model[0]`) of the first car (`car[0]`) has the `name` 
 .then()
 ```
 
-Test if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`:
+Tests if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -478,7 +482,7 @@ Test if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`:
 .then()
 ``` 
 
-Test if there is any `model` of any `cars` with `Ivory` value at index 1 of `colors` array:
+Tests if there is any `model` of any `cars` with `Ivory` value at index 1 of `colors` array:
 ```haxe
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
@@ -488,5 +492,110 @@ Test if there is any `model` of any `cars` with `Ivory` value at index 1 of `col
 .then()
 ``` 
 
+> ***
+> SPECIAL CASE: When the root object is an array!
+> ***
+
+If the received data is an Array, for example...
+```json
+[
+    {"name" : "red", "color" : "#FF0000"},
+    {"name" : "green", "color" : "#00FF00"},
+    {"name" : "blue", "color" : "#0000FF"},
+]
+```
+
+...and you want assert only some elements, you can do like this:
+```haxe
+.makeRequest('Asserting Data')
+    .GETting('http://localhost:8080/color/list')
+    .makeDataAsserts(
+        {
+            "[1]" : {name : "green"},
+            "[2]" : {color : "#0000FF"}
+        }
+    )
+.then()
+``` 
+
 ### 5. Keep Data
-todo
+
+Keepers are used to store some information in memory to be used in any future requests.
+
+**keepingData(property:String, key:String)**
+
+Let's say you request a list of books and then need to get some info about the author using the id:
+
+```json
+[
+    {
+        "book_id" : 8984,
+        "author_id" : 789,
+        "author" : "Jane Austen",
+        "title" : "Pride and Prejudice"
+    },
+    {
+        "book_id" : 5632,
+        "author_id" : 6372,
+        "author" : "Giovanni Boccaccio",
+        "title" : "The Decameron",
+    },
+    ...
+]
+```
+
+It's possible to get only the `author_id` of the first item of the array.
+```haxe
+.makeRequest('Request Book List')
+    .GETting('http://localhost:8080/book/list')
+    .keepingData('[0].author_id', 'keep_author_id')
+.then()
+``` 
+
+Then, in the next request, you can use the `keep_author_id` in the url...
+```haxe
+.makeRequest('Request Book List')
+    .GETting('http://localhost:8080/author/#keep_author_id')        // the url will be converted to http://localhost:8080/author/789 in the future.
+    .mustPass()
+.then()
+``` 
+
+...or any other `StringKeeper` objetct:
+```haxe
+.makeRequest('Request Book List')
+    .GETting('http://localhost:8080/author')
+    .sendingFormData('author_id', '#keep_author_id')                // the value will be converted to "789" in the future.
+    .mustPass()
+.then()
+``` 
+
+**keepingHeader(header:String, key:String)**
+
+You can keep response headers values and works just like keeping data.
+```haxe
+.makeRequest('Request Book List')
+    .GETting('http://localhost:8080/book/list')
+    .keepingHeader('some-special-header', 'specialHeader')
+.then()
+``` 
+
+## More Examples
+
+The file [test\ApiRockTest.hx](https://github.com/triture/apirock/blob/master/test/ApiRockTest.hx) contains a lot of examples.
+
+To build this examples, clone the [ApiRock git repository](https://github.com/triture/apirock) and:
+```bash
+> haxe examples.hxml
+```
+
+and run...
+```bash
+> neko build/example.n
+```
+
+> **DEBUG MODE**
+> ***
+> Build your haxe code using -D debug:
+> ```bash
+> > haxe examples.hxml -D debug
+> ```

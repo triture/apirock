@@ -9,59 +9,58 @@ class CaseAssertives extends Test {
     
     function testCompareSameTypes() {
         var a:Assertives = new Assertives();
-
-        Assert.isTrue(a.compareTypes(null, null));
-        Assert.isTrue(a.compareTypes("", ""));
-        Assert.isTrue(a.compareTypes(0, 0));
-        Assert.isTrue(a.compareTypes([], []));
-        Assert.isTrue(a.compareTypes(0.1, 0.1));
-        Assert.isTrue(a.compareTypes({}, {}));
-        Assert.isTrue(a.compareTypes(true, true));
+        
+        Assert.isTrue(a.compareStrings("", ""));
+        Assert.isTrue(a.compareInts(0, 0));
+        Assert.isTrue(a.compareArrays([], []));
+        Assert.isTrue(a.compareFloats(0.1, 0.1));
+        Assert.isTrue(a.compareObjects({}, {}));
+        Assert.isTrue(a.compareBools(true, true));
 
     }
 
     function testCompareWrongTypes() {
         var a:Assertives = new Assertives();
 
-        Assert.isFalse(a.compareTypes("", null));
-        Assert.isFalse(a.compareTypes("", 0));
-        Assert.isFalse(a.compareTypes("", []));
-        Assert.isFalse(a.compareTypes("", 0.1));
-        Assert.isFalse(a.compareTypes("", {}));
-        Assert.isFalse(a.compareTypes("", true));
+        Assert.isFalse(a.compareValues("", null));
+        Assert.isFalse(a.compareValues("", 0));
+        Assert.isFalse(a.compareValues("", []));
+        Assert.isFalse(a.compareValues("", 0.1));
+        Assert.isFalse(a.compareValues("", {}));
+        Assert.isFalse(a.compareValues("", true));
         
-        Assert.isFalse(a.compareTypes(0, null));
-        Assert.isFalse(a.compareTypes(0, ""));
-        Assert.isFalse(a.compareTypes(0, []));
-        Assert.isFalse(a.compareTypes(0, {}));
-        Assert.isFalse(a.compareTypes(0, true));
+        Assert.isFalse(a.compareValues(0, null));
+        Assert.isFalse(a.compareValues(0, ""));
+        Assert.isFalse(a.compareValues(0, []));
+        Assert.isFalse(a.compareValues(0, {}));
+        Assert.isFalse(a.compareValues(0, true));
 
-        Assert.isFalse(a.compareTypes([], null));
-        Assert.isFalse(a.compareTypes([], ""));
-        Assert.isFalse(a.compareTypes([], 0));
-        Assert.isFalse(a.compareTypes([], 0.1));
-        Assert.isFalse(a.compareTypes([], {}));
-        Assert.isFalse(a.compareTypes([], true));
+        Assert.isFalse(a.compareValues([], null));
+        Assert.isFalse(a.compareValues([], ""));
+        Assert.isFalse(a.compareValues([], 0));
+        Assert.isFalse(a.compareValues([], 0.1));
+        Assert.isFalse(a.compareValues([], {}));
+        Assert.isFalse(a.compareValues([], true));
 
-        Assert.isFalse(a.compareTypes(0.1, null));
-        Assert.isFalse(a.compareTypes(0.1, ""));
-        Assert.isFalse(a.compareTypes(0.1, []));
-        Assert.isFalse(a.compareTypes(0.1, {}));
-        Assert.isFalse(a.compareTypes(0.1, true));
+        Assert.isFalse(a.compareValues(0.1, null));
+        Assert.isFalse(a.compareValues(0.1, ""));
+        Assert.isFalse(a.compareValues(0.1, []));
+        Assert.isFalse(a.compareValues(0.1, {}));
+        Assert.isFalse(a.compareValues(0.1, true));
         
-        Assert.isFalse(a.compareTypes({}, null));
-        Assert.isFalse(a.compareTypes({}, ""));
-        Assert.isFalse(a.compareTypes({}, 0));
-        Assert.isFalse(a.compareTypes({}, []));
-        Assert.isFalse(a.compareTypes({}, 0.1));
-        Assert.isFalse(a.compareTypes({}, true));
+        Assert.isFalse(a.compareValues({}, null));
+        Assert.isFalse(a.compareValues({}, ""));
+        Assert.isFalse(a.compareValues({}, 0));
+        Assert.isFalse(a.compareValues({}, []));
+        Assert.isFalse(a.compareValues({}, 0.1));
+        Assert.isFalse(a.compareValues({}, true));
 
-        Assert.isFalse(a.compareTypes(true, null));
-        Assert.isFalse(a.compareTypes(true, ""));
-        Assert.isFalse(a.compareTypes(true, 0));
-        Assert.isFalse(a.compareTypes(true, []));
-        Assert.isFalse(a.compareTypes(true, 0.1));
-        Assert.isFalse(a.compareTypes(true, {}));
+        Assert.isFalse(a.compareValues(true, null));
+        Assert.isFalse(a.compareValues(true, ""));
+        Assert.isFalse(a.compareValues(true, 0));
+        Assert.isFalse(a.compareValues(true, []));
+        Assert.isFalse(a.compareValues(true, 0.1));
+        Assert.isFalse(a.compareValues(true, {}));
 
     }
 

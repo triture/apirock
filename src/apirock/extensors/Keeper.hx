@@ -5,7 +5,10 @@ import apirock.ApiRock;
 import apirock.helper.ApiRockOut;
 import haxe.ds.StringMap;
 import apirock.activity.Activity;
+import anonstruct.AnonStruct;
 
+@:access(anonstruct.AnonPropArray)
+@:access(anonstruct.AnonPropObject)
 @:access(apirock.types.StringKeeper)
 class Keeper {
     
@@ -21,6 +24,11 @@ class Keeper {
         this.activity = activity;
     }
 
+    inline private function isArray(value:Dynamic):Bool return new AnonStruct().valueArray().validate_isArray(value);
+    inline private function isObject(value:Dynamic):Bool return new AnonStruct().valueObject().validate_isObject(value);
+
+    inline private function getArrayIndexRegex():EReg return new EReg('\\[\\d+\\]$', '');
+
     private function drill(fields:Array<String>, data:Dynamic):Dynamic {
         if (fields == null || fields.length == 0 || data == null) return data;
 
@@ -29,13 +37,19 @@ class Keeper {
         while (field == '') field = fields.shift();
 
         // is asking for array ?
-        var regex:EReg = new EReg('\\[\\d+\\]$', '');
+        var regex:EReg = this.getArrayIndexRegex();
         
         if (regex.match(field)) {
 
             var matched:String = regex.matched(0);
             var field:String = regex.matchedLeft();
 
+            if (StringTools.trim(field).length == 0 && this.isArray(data)) {
+                var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
+                var arrData:Array<Dynamic> = data;
+
+                if (arrData.length > index) return drill(fields, arrData[index]);
+            }
             if (Reflect.hasField(data, field) && Std.is(Reflect.field(data, field), Array)) {
                 var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
                 var arrData:Array<Dynamic> = Reflect.field(data, field);

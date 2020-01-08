@@ -1,0 +1,6 @@
+-cp test
+-lib utest
+-lib apirock
+
+-main ApiRockTest
+-neko build/example.n

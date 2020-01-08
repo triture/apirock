@@ -1,5 +1,6 @@
 package ;
 
+import apirock.types.StringKeeper;
 import anonstruct.AnonStruct;
 import apirock.ApiRock;
 
@@ -10,7 +11,8 @@ class ApiRockTest {
         var apirock:ApiRock = new ApiRock("Postman Echo");
 
         // GET GET Request
-        apirock.makeRequest('Get a simple request')
+        apirock
+        .makeRequest('Get a simple request')
             .GETting('https://postman-echo.com/get?x=0')
             .sendingQueryStringData('foo', 'bar')
             .sendingQueryStringData('foo', 'far')
@@ -163,6 +165,23 @@ class ApiRockTest {
             .mustDoCode(502)
         .then()
 
+        .makeRequest('Storing String Keepers')
+            .POSTing('https://postman-echo.com/post')
+            .sendingFormData('random_id', Std.string(Math.floor(Math.random()*1000)))
+            .keepingData('form.random_id', 'keep_id')
+        .then()
+
+        .makeRequest('Using String Keepers')
+            .GETting('https://postman-echo.com/get')
+            .sendingQueryStringData('data_from_other_request', '#keep_id')
+            .makeDataAsserts({args:{data_from_other_request : new StringKeeper('#keep_id')}})
+        .then()
+
+        .makeRequest('Get json array')
+            .GETting('https://jsonplaceholder.typicode.com/posts')
+            .makeDataAsserts({'[0]': {id:1} })
+            .keepingData('[0].id', 'post_id')
+        .then()
         .runTests();
 
     }

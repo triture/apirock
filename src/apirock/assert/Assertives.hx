@@ -1,5 +1,6 @@
 package apirock.assert;
 
+import apirock.types.StringKeeper;
 import datetime.DateTime;
 import anonstruct.AnonStruct;
 
@@ -32,6 +33,8 @@ class Assertives {
     inline private function isBool(value:Dynamic):Bool return new AnonStruct().valueBool().validate_isBool(value);
     inline private function isArray(value:Dynamic):Bool return new AnonStruct().valueArray().validate_isArray(value);
     inline private function isObject(value:Dynamic):Bool return new AnonStruct().valueObject().validate_isObject(value);
+    
+    inline private function getArrayIndexRegex():EReg return new EReg('\\[\\d+\\]$', '');
 
     public function getErrors():Array<String> return this.errors.copy();
     
@@ -47,56 +50,56 @@ class Assertives {
     // B = DATA RECEIVED
     // ALWAYS!
 
-    private function compareTypes(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
-
-        if (map == null) map = [];
-
-        if (a == null && b == null) return true;
-        else if (this.isString(a) && this.isString(b)) return true;
-        else if (this.isInt(a) && this.isInt(b)) return true;
-        else if (this.isFloat(a) && this.isFloat(b)) return true;
-        else if (this.isBool(a) && this.isBool(b)) return true;
-        else if (this.isDate(a) && this.isDate(b)) return true;
-        else if (this.isArray(a) && this.isArray(b)) return true;
-        else if (this.isObject(a) && this.isObject(b)) return true;
-        else {
-
-            if (a == null || b == null) {
-                this.addErrorValue(a, b);
-                return false;
-
-            } else {
-
-                if (map.length > 0) this.addError("Wrong type for " + map.join("."));
-                else this.addError("Values are not same type");
-
-                return false;
-            }
-        }
-    }
-
     private function compareValues(a:Dynamic, b:Dynamic, ?map:Array<String>):Bool {
 
         if (map == null) map = [];
 
-        if (this.compareTypes(a, b, map)) {
-            
-            if (a == null) return a == b;
-            else if (this.isString(a) && this.isString(b)) return this.compareStrings(a, b, map);
-            else if (this.isInt(a) && this.isInt(b)) return this.compareInts(a, b, map);
-            else if (this.isFloat(a) && this.isFloat(b)) return this.compareFloats(a, b);
-            else if (this.isBool(a) && this.isBool(b)) return this.compareBools(a, b, map);
-            else if (this.isArray(a) && this.isArray(b)) return this.compareArrays(a, b, map);
-            else if (this.isDate(a) && this.isDate(b)) return this.compareDates(a, b, map);
-            else if (this.isObject(a) && this.isObject(b)) return this.compareObjects(a, b, map);
-            else {
+        if (a == null && b == null) return true;
+        else if (this.isString(a) && this.isString(b)) return this.compareStrings(a, b, map);
+        else if (this.isInt(a) && this.isInt(b)) return this.compareInts(a, b, map);
+        else if (this.isFloat(a) && this.isFloat(b)) return this.compareFloats(a, b);
+        else if (this.isBool(a) && this.isBool(b)) return this.compareBools(a, b, map);
+        else if (this.isArray(a) && this.isArray(b)) return this.compareArrays(a, b, map);
+        else if (this.isDate(a) && this.isDate(b)) return this.compareDates(a, b, map);
+        else if (this.isObject(a) && this.isObject(b)) return this.compareObjects(a, b, map);
+        else {
 
-                this.addError("Unable to identify types");
+            if (this.isObject(a) && this.isArray(b)) {
+                // validate if is a special mode of validation (validate only some indexes)
+                var correctMode:Bool = true;
 
-                return false;
+                var newA:Dynamic = {};
+                var newB:Dynamic = {};
+
+                var fields:Array<String> = Reflect.fields(a);
+
+                if (fields == null || fields.length == 0) correctMode = false;
+                else {
+                    for (field in fields) {
+                        var ereg:EReg = this.getArrayIndexRegex();
+                        
+                        if (field == '[?]' || (ereg.match(field) && ereg.matchedLeft() == '')) {
+                            Reflect.setField(newA, 'root${field}', Reflect.field(a, field));
+                        } else {
+                            correctMode = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (correctMode) {
+                    Reflect.setField(newB, 'root', b);
+                    return this.compareValues(newA, newB);
+                }
+
             }
 
-        } else return false;
+            if (map.length > 0) this.addError("Wrong type for " + map.join("."));
+            else this.addError("Values are not same type");
+
+            return false;
+        }
+
     }
 
     private function addErrorValue(expected:Dynamic, gets:Dynamic, ?map:Array<String>):Void {
@@ -143,10 +146,10 @@ class Assertives {
         else return aString == bString;
     }
 
-    private function compareStrings(a:String, b:String, ?map:Array<String>):Bool {
-        if (a == b) return true;
+    private function compareStrings(a:StringKeeper, b:StringKeeper, ?map:Array<String>):Bool {
+        if (a.toString() == b.toString()) return true;
         else {
-            this.addErrorValue(a, b, map);
+            this.addErrorValue(a.toString(), b.toString(), map);
             return false;
         }
     }
@@ -203,7 +206,7 @@ class Assertives {
 
         var fieldsA:Array<String> = Reflect.fields(a);
         
-        var regex:EReg = new EReg('\\[\\d+\\]$', '');
+        var regex:EReg = this.getArrayIndexRegex();
 
         for (field in fieldsA) {
             map.push(field);
