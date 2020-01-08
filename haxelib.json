@@ -5,7 +5,7 @@
     "tags": ["neko", "cpp", "test", "rest"],
     "classPath": "src/",
     "description": "ApiRock is a fluent Haxe library you can use to test HTTP based REST services.",
-    "version": "0.1.0",
+    "version": "0.1.0-beta",
     "releasenote": "First Release. Tests and suggestions are super welcome!",
     "contributors": [ "triture" ],
     "dependencies": {

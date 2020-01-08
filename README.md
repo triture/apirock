@@ -7,6 +7,8 @@ Just another API testing library.
 
 ApiRock is a fluent Haxe library you can use to test HTTP based REST services.
 
+![ApiRock is Fluent](https://raw.githubusercontent.com/triture/apirock/master/media/apirock_write.gif "ApiRock is Fluent")
+
 Example:
 ```haxe
 new ApiRock("Postman Echo")                     // Create your test using 'Fluent Interface'
@@ -27,6 +29,8 @@ new ApiRock("Postman Echo")                     // Create your test using 'Fluen
 
 .runTests();                                    // then RUN!
 ```
+
+![Test running](https://raw.githubusercontent.com/triture/apirock/master/media/apirock_run.gif "Test running")
 
 ## Content
 
