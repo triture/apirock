@@ -28,7 +28,7 @@ class ApiRock_Readme {
         .waitFor(5, WaitActivityMeasure.SECONDS)
         .then()
 
-        .makeRequest('Get another request after 5 secods')
+        .makeRequest('Get another request after 5 seconds')
             .GETting('https://postman-echo.com/get')
             .mustPass()
         .then()

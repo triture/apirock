@@ -512,7 +512,10 @@ private class RequestKeeperAndAssertsAndExpectingAndMusts extends RequestKeeperA
 @:access(apirock.activity.RequestActivity)
 private class RequestDataAndHeaders extends RequestKeeperAndAssertsAndExpectingAndMusts {
 
-    public function sendingBasicAUTH(username:String, password):RequestDataAndHeaders {
+    public function sendingBearerToken(token:StringKeeper) return this.sendingHeader('Authorization', new StringKeeper('Bearer ') + token);
+    
+
+    public function sendingBasicAUTH(username:String, password:String):RequestDataAndHeaders {
         var key:String = haxe.crypto.Base64.encode(haxe.io.Bytes.ofString(username + ':' + password));
         
         return this.sendingHeader('Authorization', 'Basic ' + key);

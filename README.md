@@ -51,7 +51,7 @@ new ApiRock("Postman Echo")                     // Create your test using 'Fluen
 
 ## Activities
 
-ApiRock is a stack of activities. After you write your group of activities, ApiRock will run everithing in order. If something goes wrong, the will end with an error.
+ApiRock is a stack of activities. After you write your group of activities, ApiRock will run everything in order. If something goes wrong, the test will end with an error.
 
 ### Request Activity
 
@@ -89,7 +89,7 @@ new ApiRock("Wait Test")
 .waitFor(5, WaitActivityMeasure.SECONDS)
 .then()
 
-.makeRequest('Get another request after 5 secods')
+.makeRequest('Get another request after 5 seconds')
     .GETting('https://postman-echo.com/get')
     .mustPass()
 .then()
@@ -429,28 +429,30 @@ Tests if `cars` has all the expected values:
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
     .makeDataAsserts(
-        "cars": [
-            { "name" : "Ford", 
-                "models" : [
-                    {"name":"Fiesta", "colors":["Pearl", "Silver"]},
-                    {"name":"Focus", "colors":["Blue", "Black"]},
-                    {"name":"Mustang", "colors":["Silver", "Blue"]}
-                ]
-            },
-            { "name" : "BMW", 
-                "models" : [
-                    {"name":"320", "colors":["Bright Yellow"]},
-                    {"name":"X3", "colors":["Titan Silver"]},
-                    {"name":"X5", "colors":["Black", "Beige"]}
-                ]
-            },
-            { "name" : "Fiat", 
-                "models" : [
-                    {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
-                    {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
-                ]
-            }
-        ]
+        {
+            "cars": [
+                { "name" : "Ford", 
+                    "models" : [
+                        {"name":"Fiesta", "colors":["Pearl", "Silver"]},
+                        {"name":"Focus", "colors":["Blue", "Black"]},
+                        {"name":"Mustang", "colors":["Silver", "Blue"]}
+                    ]
+                },
+                { "name" : "BMW", 
+                    "models" : [
+                        {"name":"320", "colors":["Bright Yellow"]},
+                        {"name":"X3", "colors":["Titan Silver"]},
+                        {"name":"X5", "colors":["Black", "Beige"]}
+                    ]
+                },
+                { "name" : "Fiat", 
+                    "models" : [
+                        {"name": "500", "colors" : ["Bianco", "Rosso"]}, 
+                        {"name" : "Panda", "colors" : ["Bianco", "Ivory"]}
+                    ]
+                }
+            ]
+        }
     )
 .then()
 ```
@@ -460,8 +462,10 @@ Tests if `cars[1]` (`cars` at `index 1`) has an object with `name` equals to `BW
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
     .makeDataAsserts(
-        "cars[1]" : {"name":"BMW"},
-        "cars[2]" : {"name":"Fiat"}
+        {
+            "cars[1]" : {"name":"BMW"},
+            "cars[2]" : {"name":"Fiat"}
+        }
     )
 .then()
 ```
@@ -471,7 +475,9 @@ Tests if the first model (`model[0]`) of the first car (`car[0]`) has the `name`
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
     .makeDataAsserts(
-        "cars[0]" : {"models[0]" : {"name": "Fiesta"}}
+        {
+            "cars[0]" : {"models[0]" : {"name": "Fiesta"}}
+        }
     )
 .then()
 ```
@@ -481,7 +487,9 @@ Tests if there is ANY car element (`cars[?]`) with the `name`equals to `Fiat`:
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
     .makeDataAsserts(
-        "cars[?]" : {"name":"Fiat"}
+        {
+            "cars[?]" : {"name":"Fiat"}
+        }
     )
 .then()
 ``` 
@@ -491,7 +499,9 @@ Tests if there is any `model` of any `cars` with `Ivory` value at index 1 of `co
 .makeRequest('Asserting Data')
     .GETting('http://localhost:8080/user/cars')
     .makeDataAsserts(
-        "cars[?]" : {"models[?]": {"colors[1]":"Ivory"}}
+        {
+            "cars[?]" : {"models[?]": {"colors[1]":"Ivory"}}
+        }
     )
 .then()
 ``` 

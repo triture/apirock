@@ -10,6 +10,13 @@ abstract StringKeeper(String) from String {
 
     @:to
     inline public function toString():String return StringKeeper.parse(this);
+
+    inline public function getStringUnparsed():String return this;
+
+    @:op(A + B)
+    public function addStringKeepers(value:StringKeeper):StringKeeper {
+        return getStringUnparsed() + value.getStringUnparsed();
+    }
     
     static public function parse(value:String):String {
         var map:StringMap<String> = KEEPER_MAP;
