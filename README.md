@@ -51,11 +51,11 @@ new ApiRock("Postman Echo")                     // Create your test using 'Fluen
 
 ## Activities
 
-ApiRock is in fact a stack of activities. After you write your group of activities, ApiRock will run everithing in order. If something fails, the test is finished with error.
+ApiRock is a stack of activities. After you write your group of activities, ApiRock will run everithing in order. If something goes wrong, the will end with an error.
 
 ### Request Activity
 
-The heart of ApiRock is make API requests and check if everything is OK.
+ApiRock makes an API requests and makes sure everything is OK.
 
 ```haxe
 new ApiRock("Google Request")
@@ -76,7 +76,7 @@ why | Explain why you need this request
 
 ### Wait Activity
 
-If you need wait some time between activities, use the Wait Activity.
+If you need wait a while between activities, use the Wait Activity.
 
 ```haxe
 new ApiRock("Wait Test")
@@ -211,7 +211,7 @@ new ApiRock('Send Header Tests')
 ```
 
 > BONUS: The method sendingBasicAUTH adds
-> an special header following the Basic AUTH rules:
+> a special header following the Basic AUTH rules:
 > https://en.wikipedia.org/wiki/Basic_access_authentication
 
 ```haxe
