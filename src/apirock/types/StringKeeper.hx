@@ -11,11 +11,19 @@ abstract StringKeeper(String) from String {
     @:to
     inline public function toString():String return StringKeeper.parse(this);
 
+    @:to
+    inline private function toDynamic():Dynamic return StringKeeper.parse(this);
+
     inline public function getStringUnparsed():String return this;
 
     @:op(A + B)
-    public function addStringKeepers(value:StringKeeper):StringKeeper {
-        return getStringUnparsed() + value.getStringUnparsed();
+    static public function stringkeeper_plus_string(a:StringKeeper, b:String):String {
+        return a.toString() + new StringKeeper(b).toString();
+    }
+
+    @:op(A + B)
+    static public function string_plus_stringkeeper(a:String, b:StringKeeper):String {
+        return new StringKeeper(a).toString() + b.toString();
     }
     
     static public function parse(value:String):String {
@@ -28,12 +36,12 @@ abstract StringKeeper(String) from String {
     }
 
     static public function addData(key:String, value:String):Void {
-        if (StringTools.startsWith('#', key)) key = key.substr(1);
+        if (StringTools.startsWith(key, '#')) key = key.substr(1);
         KEEPER_MAP.set(key, value);
     }
 
     static public function getData(key:String):String {
-        if (StringTools.startsWith('#', key)) key = key.substr(1);
+        if (StringTools.startsWith(key, '#')) key = key.substr(1);
         return KEEPER_MAP.exists(key) ? KEEPER_MAP.get(key) : "";
     }
     
