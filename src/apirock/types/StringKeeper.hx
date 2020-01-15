@@ -32,6 +32,13 @@ abstract StringKeeper(String) from String {
 
         for (key in map.keys()) result = result.split('#${key}').join(map.get(key));
 
+        try {
+            map = Sys.environment();
+            if (map != null) for (key in map.keys()) {
+                result = result.split('#${key}').join(map.get(key));
+            }
+        } catch(e:Dynamic) {}
+
         return result;
     }
 
@@ -42,7 +49,9 @@ abstract StringKeeper(String) from String {
 
     static public function getData(key:String):String {
         if (StringTools.startsWith(key, '#')) key = key.substr(1);
-        return KEEPER_MAP.exists(key) ? KEEPER_MAP.get(key) : "";
+        if (KEEPER_MAP.exists(key)) return KEEPER_MAP.get(key);
+        else if (Sys.environment().exists(key)) return Sys.environment().get('key');
+        return '';
     }
     
     static public function clear():Void KEEPER_MAP = new StringMap<String>();

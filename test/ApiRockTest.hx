@@ -176,14 +176,20 @@ class ApiRockTest {
             .sendingQueryStringData('data_from_other_request', '#keep_id')
             .makeDataAsserts({args:{data_from_other_request : new StringKeeper('#keep_id')}})
         .then()
-
+        
+        .makeRequest('Get String Keepers from Sys Env')
+            .POSTing('https://postman-echo.com/post')
+            .sendingFormData('test', '#MY_VALUE')
+            .makeDataAsserts({form:{test:'test'}})
+        .then()
+        
         .makeRequest('Get json array')
             .GETting('https://jsonplaceholder.typicode.com/posts')
             .makeDataAsserts({'[0]': {id:1} })
             .keepingData('[0].id', 'post_id')
         .then()
         .runTests();
-
+        
     }
 
 }

@@ -1,5 +1,8 @@
 language: haxe
 
+env:
+  - MY_VALUE=test
+
 install:
   - haxelib install hxcpp
   - haxelib install datetime

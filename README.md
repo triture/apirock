@@ -131,7 +131,45 @@ new ApiRock('Custom Test')
 ```
 
 ## StringKeeper
-todo
+StringKeeper is a special kind of String. You can use #hash values on string that will be replaced by a value in the future.
+
+Example:
+```haxe
+
+// Seting a StringKeeper
+var foo:StringKeeper = 'Foo value is #value';
+trace(foo);                                     // print 'Foo value is #value'
+
+// ...later in the code
+StringKeeper.addData('value', 'bar');
+trace(foo);                                     // print 'Foo value is bar'
+
+// ...and other change
+StringKeeper.addData('value', 'none');
+trace(foo);                                     // print 'Foo value is none'
+
+// cleaning StringKeeper data
+StringKeeper.clear();
+trace(foo);                                     // print 'Foo value is #value'
+```
+
+**StringKeeper.addData(key:String, value:String):Void**
+
+**StringKeeper.getData(key:String):Void**
+
+**StringKeeper.clear():Void**
+
+> ### StringKeeper works with ENVIRONMENT VARIABLES too!
+> 
+> ```bash
+> macbook:~ export MY_VALUE=test
+> ```
+>  
+> ```haxe
+> var foo:StringKeeper = 'Sys Value: #MY_VALUE';
+> trace(foo);                                   // print 'Sys Value: test'
+> ```
+>
 
 ## Request Tricks
 
