@@ -39,6 +39,7 @@ class Assertives {
     public function getErrors():Array<String> return this.errors.copy();
     
     public function setAssertive(value:Dynamic) this.assertive = value;
+    public function getAssertive() return this.assertive;
 
     public function compare(data:Dynamic):Bool {
         this.errors = [];

@@ -15,6 +15,7 @@ class RequestActivity extends Activity {
     private var why:StringKeeper;
     private var runBefore:Void->Void;
     private var anonClass:Class<AnonStruct>;
+    private var anonArgs:Array<Dynamic>;
     private var mustFail:Bool = false;
     private var isCriticalRequest:Bool = true;
     private var isCriticalStrof:Bool = true;
@@ -128,9 +129,11 @@ class RequestActivity extends Activity {
 
             var reportError:String = 'ASSERTIVE errors at ${index+1}.${subIndex-1}.';
             this.apirock.errors.push(reportError);
-        }
 
-        ApiRockOut.printList(assert.getErrors(), 3);
+            ApiRockOut.printList(assert.getErrors(), 3);
+            ApiRockOut.printWithTab('Received: ${haxe.Json.stringify(data)}', 4);
+            ApiRockOut.printWithTab('Compared to: ${Std.string(assert.getAssertive())}', 4);
+        }
 
         if (hasError) {
 
@@ -298,6 +301,8 @@ class RequestActivity extends Activity {
                 ApiRockOut.printWithTab('- ERROR! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
             }
 
+            ApiRockOut.printWithTab(this.resultData, 3);
+
             if (this.isCriticalRequest) {
 
                 ApiRockOut.print('');
@@ -348,7 +353,7 @@ class RequestActivity extends Activity {
 
             if (!hasError) {
                 try {
-                    var anon:AnonStruct = Type.createInstance(this.anonClass, []);
+                    var anon:AnonStruct = Type.createInstance(this.anonClass, this.anonArgs == null ? [] : this.anonArgs);
                     anon.validateAll(data);
 
                     ApiRockOut.printWithTab("- Success!", 3);
@@ -475,8 +480,9 @@ private class RequestKeeperAndAsserts extends RequestKeeper {
 @:access(apirock.activity.RequestActivity)
 private class RequestKeeperAndAssertsAndExpecting extends RequestKeeperAndAsserts {
 
-    public function expecting(anon:Class<AnonStruct>):RequestKeeperAndAsserts {
+    public function expecting(anon:Class<AnonStruct>, ?args:Array<Dynamic>):RequestKeeperAndAsserts {
         this.request.anonClass = anon;
+        this.request.anonArgs = args;
         this.request.isCriticalStrof = true;
 
         return new RequestKeeperAndAsserts(this.request);
