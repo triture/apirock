@@ -215,11 +215,11 @@ class RequestActivity extends Activity {
             }...'
         );
 
+        var runtime:Float = 0;
         var output:BytesOutput = null;
         var doRequest:Void->Void = null;
 
         doRequest = function():Void {
-
             output = new BytesOutput();
 
             var http:haxe.Http = new haxe.Http(requestData.url);
@@ -263,7 +263,8 @@ class RequestActivity extends Activity {
             }
 
             http.onError = function(message:String):Void {}
-            
+
+            runtime = Date.now().getTime();
             http.customRequest(true, output, requestData.method);
         }
 
@@ -278,27 +279,28 @@ class RequestActivity extends Activity {
         }
 
         this.resultData = output.getBytes().toString();
+        runtime = Math.fround(Date.now().getTime() - runtime);
 
         #if debug
         ApiRockOut.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
         #end
 
-        this.validateResult(index);
+        this.validateResult(index, runtime);
         subIndex = this.validateData(index, subIndex);
         subIndex = this.validateAnonStruct(index, subIndex);
         subIndex = this.executeKeepers(index, subIndex);
 
     }
 
-    private function validateResult(index:Int):Void {
+    private function validateResult(index:Int, runTime:Float):Void {
         if (this.resultCode < this.acceptCodes[0] || this.resultCode > this.acceptCodes[1]) {
             if (this.mustCode == null) {
 
-                if (this.mustFail) ApiRockOut.printWithTab("- ERROR! This test should be FAIL.", 3);
-                else ApiRockOut.printWithTab("- ERROR! This test should be SUCCESS.", 3);
+                if (this.mustFail) ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be FAIL.', 3);
+                else ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be SUCCESS.', 3);
 
             } else {
-                ApiRockOut.printWithTab('- ERROR! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
+                ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
             }
 
             ApiRockOut.printWithTab(this.resultData, 3);
@@ -317,11 +319,11 @@ class RequestActivity extends Activity {
 
             if (this.mustCode == null) {
 
-                if (this.mustFail) ApiRockOut.printWithTab("- SUCCESS. This test should FAIL.", 3);
-                else ApiRockOut.printWithTab("- SUCCESS! This test should be SUCCESS.", 3);
+                if (this.mustFail) ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms. This test should FAIL.', 3);
+                else ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms! This test should be SUCCESS.', 3);
 
             } else {
-                ApiRockOut.printWithTab('- SUCCESS! This test expected a code ${this.mustCode}.', 3);
+                ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms! This test expected a code ${this.mustCode}.', 3);
             }
         }
     }
