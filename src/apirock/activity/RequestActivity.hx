@@ -287,8 +287,8 @@ class RequestActivity extends Activity {
         #end
 
         this.validateResult(index, runtime);
-        subIndex = this.validateData(index, subIndex);
         subIndex = this.validateAnonStruct(index, subIndex);
+        subIndex = this.validateData(index, subIndex);
         subIndex = this.executeKeepers(index, subIndex);
 
     }
