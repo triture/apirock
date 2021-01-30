@@ -41,7 +41,7 @@ class ApiRock {
         return clear;
     }
 
-    public function customActivity(run:(String->Void)->Void):CustomActivity {
+    public function customActivity(run:(outputFunction:(value:String)->Void)->Void):CustomActivity {
         var custom:CustomActivity = new CustomActivity(this, run);
         this.activityStack.push(custom);
         return custom;

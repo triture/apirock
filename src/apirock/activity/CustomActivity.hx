@@ -4,9 +4,9 @@ import apirock.helper.ApiRockOut;
 
 class CustomActivity extends Activity {
     
-    private var customFunction:(String->Void)->Void;
+    private var customFunction:(outputFunction:(value:String)->Void)->Void;
 
-    public function new(apirock:ApiRock, customFunction:(String->Void)->Void) {
+    public function new(apirock:ApiRock, customFunction:(outputFunction:(value:String)->Void)->Void) {
         this.customFunction = customFunction;
         super(apirock);
     }
