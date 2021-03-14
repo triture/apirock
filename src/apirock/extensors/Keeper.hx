@@ -50,7 +50,7 @@ class Keeper {
 
                 if (arrData.length > index) return drill(fields, arrData[index]);
             }
-            if (Reflect.hasField(data, field) && Std.is(Reflect.field(data, field), Array)) {
+            if (Reflect.hasField(data, field) && Std.isOfType(Reflect.field(data, field), Array)) {
                 var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
                 var arrData:Array<Dynamic> = Reflect.field(data, field);
 

@@ -16,7 +16,7 @@ class Activity {
     }
 
     private function printCatchError(e:Dynamic):Void {
-        if (Std.is(e, Array)) {
+        if (Std.isOfType(e, Array)) {
 
             ApiRockOut.print("");
             ApiRockOut.print("ERROR : ");

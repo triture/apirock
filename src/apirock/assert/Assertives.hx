@@ -121,24 +121,24 @@ class Assertives {
         var aString:String = '';
         var bString:String = '';
 
-        if (Std.is(a, Date)) {
+        if (Std.isOfType(a, Date)) {
             var aDate:DateTime = DateTime.fromDate(a);
             aString = aDate.toString();
-        } else if (Std.is(a, String)) {
+        } else if (Std.isOfType(a, String)) {
             var aDate:DateTime = DateTime.fromString(a);
             aString = aDate.toString();
-        } else if (Std.is(a, Float)) {
+        } else if (Std.isOfType(a, Float)) {
             var aDate:DateTime = DateTime.fromTime(a);
             aString = aDate.toString();
         }
 
-        if (Std.is(b, Date)) {
+        if (Std.isOfType(b, Date)) {
             var bDate:DateTime = DateTime.fromDate(b);
             bString = bDate.toString();
-        } else if (Std.is(b, String)) {
+        } else if (Std.isOfType(b, String)) {
             var bDate:DateTime = DateTime.fromString(b);
             bString = bDate.toString();
-        } else if (Std.is(b, Float)) {
+        } else if (Std.isOfType(b, Float)) {
             var bDate:DateTime = DateTime.fromTime(b);
             bString = bDate.toString();
         }
@@ -187,7 +187,7 @@ class Assertives {
 
             for (i in 0 ... a.length) {
                 map.push("[" + i + "]");
-                
+
                 if (!this.compareValues(a[i], b[i], map)) return false;
 
                 map.pop();
@@ -206,7 +206,7 @@ class Assertives {
         if (map == null) map = [];
 
         var fieldsA:Array<String> = Reflect.fields(a);
-        
+
         var regex:EReg = this.getArrayIndexRegex();
 
         for (field in fieldsA) {
@@ -214,16 +214,16 @@ class Assertives {
 
             if (Reflect.hasField(a, field) && Reflect.hasField(b, field)) {
                 if (!this.compareValues(
-                    Reflect.field(a, field), 
+                    Reflect.field(a, field),
                     Reflect.field(b, field)
                 )) return false;
             } else if (StringTools.endsWith(field, '[?]')) {
                 var arrField:String = field.substr(0, field.length-3);
 
-                if (Reflect.hasField(b, arrField) && Std.is(Reflect.field(b, arrField), Array)) {
+                if (Reflect.hasField(b, arrField) && Std.isOfType(Reflect.field(b, arrField), Array)) {
                     var arrData:Array<Dynamic> = Reflect.field(b, arrField);
                     var currData:Dynamic = Reflect.field(a, field);
-                    
+
                     var itemFound:Bool = false;
 
                     var tempErrors:Array<String> = this.errors;
@@ -242,7 +242,7 @@ class Assertives {
                         this.addError('${map.join(".")} doesnt have the value ${Std.string(currData)}');
                         return false;
                     }
-                    
+
                 } else {
                     this.addError("Field " + map.join(".") + " not found");
                     return false;
@@ -253,7 +253,7 @@ class Assertives {
                 var matched:String = regex.matched(0);
                 var arrField:String = regex.matchedLeft();
 
-                if (Reflect.hasField(b, arrField) && Std.is(Reflect.field(b, arrField), Array)) {
+                if (Reflect.hasField(b, arrField) && Std.isOfType(Reflect.field(b, arrField), Array)) {
                     var index:Int = Std.parseInt(matched.substring(1, matched.length-1));
                     var arrData:Array<Dynamic> = Reflect.field(b, arrField);
                     
