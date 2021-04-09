@@ -30,7 +30,20 @@ abstract StringKeeper(String) from String {
         var map:StringMap<String> = KEEPER_MAP;
         var result = value;
 
-        for (key in map.keys()) result = result.split('#${key}').join(map.get(key));
+        var keys:Array<String> = [for (key in map.keys()) key];
+
+        keys.sort(function(a:String, b:String):Int {
+            if (a < b) {
+                return 1;
+            }
+            else if (a > b) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+
+        for (key in keys) result = result.split('#${key}').join(map.get(key));
 
         try {
             map = Sys.environment();
