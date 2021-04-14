@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import haxe.io.Bytes;
 import apirock.ApiRock;
 import haxe.ds.StringMap;
 import haxe.io.BytesOutput;
@@ -37,13 +38,19 @@ class RequestActivity extends Activity {
     public var acceptCodes:Array<Int> = [200, 299];
 
     public var resultCode:Int = 0;
-    public var resultData:String = "";
+    public var resultDataBytes:Bytes;
+    public var resultData(get, null):String;
     public var resultHeaders:Map<String, String> = new Map<String, String>();
 
     public function new(apirock:ApiRock, why:StringKeeper) {
         super(apirock);
 
         this.why = why;
+    }
+
+    private function get_resultData():String {
+        if (this.resultDataBytes == null) return null;
+        else return this.resultDataBytes.toString();
     }
 
     private function helperGenerateUrlEncodedData(items:Array<KeyValue>):String {
@@ -279,12 +286,15 @@ class RequestActivity extends Activity {
             Sys.exit(300);
         }
 
-        this.resultData = output.getBytes().toString();
+        this.resultDataBytes = output.getBytes();
         runtime = Math.fround(Date.now().getTime() - runtime);
 
-        #if debug
-        ApiRockOut.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
-        #end
+        if (this.resultHeaders.exists('content-type') && this.resultHeaders.get('content-type').indexOf('application/json') > -1) {
+            #if debug
+            ApiRockOut.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
+            #end
+        }
+
 
         this.validateResult(index, runtime);
         subIndex = this.validateAnonStruct(index, subIndex);
