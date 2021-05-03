@@ -230,6 +230,7 @@ class RequestActivity extends Activity {
             output = new BytesOutput();
 
             var http:haxe.Http = new haxe.Http(requestData.url);
+            http.cnxTimeout = 30;
             http.setHeader('User-Agent', 'APIRock');
 
             for (header in requestData.headers.keys()) {
