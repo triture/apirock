@@ -23,8 +23,8 @@ class ApiRock {
 
     public function addActivity(activity:Activity):Void this.activityStack.push(activity);
 
-    public function makeRequest(why:StringKeeper):RequestActivity {
-        var requester:RequestActivity = new RequestActivity(this, why);
+    public function makeRequest(why:StringKeeper, silent:Bool = false):RequestActivity {
+        var requester:RequestActivity = new RequestActivity(this, why, silent);
         this.addActivity(requester);
         return requester;
     }
@@ -53,18 +53,15 @@ class ApiRock {
 
         var index:Int = 0;
         for (item in this.activityStack) {
-
-            ApiRockOut.print("");
+            if (!item.silent) ApiRockOut.print("");
             item.execute(index);
-
-            index++;
+            if (!item.silent) index++;
         }
 
 
         if (this.errors.length == 0) {
 
             ApiRockOut.printBox("[green]DONE[/green]");
-            Sys.exit(0);
 
         } else {
 

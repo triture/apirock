@@ -42,9 +42,8 @@ class RequestActivity extends Activity {
     public var resultData(get, null):String;
     public var resultHeaders:Map<String, String> = new Map<String, String>();
 
-    public function new(apirock:ApiRock, why:StringKeeper) {
-        super(apirock);
-
+    public function new(apirock:ApiRock, why:StringKeeper, silent:Bool = false) {
+        super(apirock, silent);
         this.why = why;
     }
 
@@ -125,28 +124,28 @@ class RequestActivity extends Activity {
 
     private function runAssertive(label:String, assert:Assertives, data:Dynamic, index:Int, subIndex:Int):Int {
         
-        ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making Assertives on received ${label}...');
+        this.printIndex('${index + 1}.${++subIndex}.', 'Making Assertives on received ${label}...');
         
         var hasError:Bool = false;
 
         if (assert.compare(data)) {
-            ApiRockOut.printWithTab('- SUCCESS! The received ${label} has the expected values.', 3);
+            this.printWithTab('- SUCCESS! The received ${label} has the expected values.', 3);
         } else {
             hasError = true;
 
             var reportError:String = 'ASSERTIVE errors at ${index+1}.${subIndex-1}.';
             this.apirock.errors.push(reportError);
 
-            ApiRockOut.printList(assert.getErrors(), 3);
-            ApiRockOut.printWithTab('Received: ${haxe.Json.stringify(data)}', 4);
-            ApiRockOut.printWithTab('Compared to: ${Std.string(assert.getAssertive())}', 4);
+            this.printList(assert.getErrors(), 3);
+            this.printWithTab('Received: ${haxe.Json.stringify(data)}', 4);
+            this.printWithTab('Compared to: ${Std.string(assert.getAssertive())}', 4);
         }
 
         if (hasError) {
 
-            ApiRockOut.print('');
-            ApiRockOut.printBox('Assertive Error');
-            ApiRockOut.print('');
+            this.print('');
+            this.printBox('Assertive Error');
+            this.print('');
 
             Sys.exit(301);
         }
@@ -173,11 +172,11 @@ class RequestActivity extends Activity {
 
             } catch (e:Dynamic) {
 
-                ApiRockOut.printWithTab("- Error! Received data is not a valid json.", 3);
+                this.printWithTab("- Error! Received data is not a valid json.", 3);
                 
-                ApiRockOut.print('');
-                ApiRockOut.printBox('Assertive Error');
-                ApiRockOut.print('');
+                this.print('');
+                this.printBox('Assertive Error');
+                this.print('');
 
                 Sys.exit(301);
             }
@@ -206,12 +205,12 @@ class RequestActivity extends Activity {
 
         var requestData:RequestData = this.helperGenerateRequestData();
 
-        ApiRockOut.printIndex(
+        this.printIndex(
             '${index + 1}.',
             '[cyan]${this.why.toString().toUpperCase()}[/cyan] making a [cyan]${requestData.method}[/cyan] request to [yellow]${requestData.url}[/yellow]... '
         );
 
-        ApiRockOut.printIndex(
+        this.printIndex(
             '${index + 1}.${++subIndex}.',
             'Expecting ${
                 this.mustCode != null
@@ -237,7 +236,7 @@ class RequestActivity extends Activity {
                 http.setHeader(header, requestData.headers.get(header));
                 
                 #if debug
-                ApiRockOut.printWithTab('REQUEST: Header ' + header + ' : ' + requestData.headers.get(header), 3);
+                this.printWithTab('REQUEST: Header ' + header + ' : ' + requestData.headers.get(header), 3);
                 #end
             }
 
@@ -246,7 +245,7 @@ class RequestActivity extends Activity {
             http.onStatus = function(value:Int):Void {
 
                 #if debug
-                ApiRockOut.printWithTab('RESULT: Status ' + Std.string(value), 3);
+                this.printWithTab('RESULT: Status ' + Std.string(value), 3);
                 #end
 
                 this.resultHeaders = new Map<String, String>();
@@ -256,7 +255,7 @@ class RequestActivity extends Activity {
                         this.resultHeaders.set(key.toLowerCase(), http.responseHeaders.get(key));
 
                         #if debug
-                        ApiRockOut.printWithTab('RESULT: Header ' + key.toLowerCase() + ' : ' + http.responseHeaders.get(key), 3);
+                        this.printWithTab('RESULT: Header ' + key.toLowerCase() + ' : ' + http.responseHeaders.get(key), 3);
                         #end
                     }
                 }
@@ -264,7 +263,7 @@ class RequestActivity extends Activity {
                 this.resultCode = value;
                 if (value == 301 && this.resultHeaders.exists("location")) {
 
-                    ApiRockOut.printWithTab('- Status 301: Making a redirect to ${Std.string(this.resultHeaders.get("location"))}.', 3);
+                    this.printWithTab('- Status 301: Making a redirect to ${Std.string(this.resultHeaders.get("location"))}.', 3);
 
                     requestData.url = Std.string(resultHeaders.get("location"));
                     doRequest();
@@ -280,9 +279,9 @@ class RequestActivity extends Activity {
         doRequest();
 
         if (resultCode == 0) {
-            ApiRockOut.print('');
-            ApiRockOut.printBox('Cannot connect to the URL [red]${requestData.url}[/red]');
-            ApiRockOut.print('');
+            this.print('');
+            this.printBox('Cannot connect to the URL [red]${requestData.url}[/red]');
+            this.print('');
 
             Sys.exit(300);
         }
@@ -292,7 +291,7 @@ class RequestActivity extends Activity {
 
         if (this.resultHeaders.exists('content-type') && this.resultHeaders.get('content-type').indexOf('application/json') > -1) {
             #if debug
-            ApiRockOut.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
+            this.printWithTab('RESULT: ' + Std.string(this.resultData), 3);
             #end
         }
 
@@ -308,20 +307,20 @@ class RequestActivity extends Activity {
         if (this.resultCode < this.acceptCodes[0] || this.resultCode > this.acceptCodes[1]) {
             if (this.mustCode == null) {
 
-                if (this.mustFail) ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be FAIL.', 3);
-                else ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be SUCCESS.', 3);
+                if (this.mustFail) this.printWithTab('- ERROR in ${runTime}ms! This test should be FAIL.', 3);
+                else this.printWithTab('- ERROR in ${runTime}ms! This test should be SUCCESS.', 3);
 
             } else {
-                ApiRockOut.printWithTab('- ERROR in ${runTime}ms! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
+                this.printWithTab('- ERROR in ${runTime}ms! This test should be CODE ${this.mustCode} but received CODE ${this.resultCode}.', 3);
             }
 
-            ApiRockOut.printWithTab(this.resultData, 3);
+            this.printWithTab(this.resultData, 3);
 
             if (this.isCriticalRequest) {
 
-                ApiRockOut.print('');
-                ApiRockOut.printBox('Error on Critical Request.');
-                ApiRockOut.print('');
+                this.print('');
+                this.printBox('Error on Critical Request.');
+                this.print('');
 
                 Sys.exit(300);
 
@@ -331,11 +330,11 @@ class RequestActivity extends Activity {
 
             if (this.mustCode == null) {
 
-                if (this.mustFail) ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms. This test should FAIL.', 3);
-                else ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms! This test should be SUCCESS.', 3);
+                if (this.mustFail) this.printWithTab('- SUCCESS in ${runTime}ms. This test should FAIL.', 3);
+                else this.printWithTab('- SUCCESS in ${runTime}ms! This test should be SUCCESS.', 3);
 
             } else {
-                ApiRockOut.printWithTab('- SUCCESS in ${runTime}ms! This test expected a code ${this.mustCode}.', 3);
+                this.printWithTab('- SUCCESS in ${runTime}ms! This test expected a code ${this.mustCode}.', 3);
             }
         }
     }
@@ -344,7 +343,7 @@ class RequestActivity extends Activity {
 
         if (this.anonClass != null) {
 
-            ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Making structural validation...');
+            this.printIndex('${index + 1}.${++subIndex}.', 'Making structural validation...');
 
             var data:Dynamic = this.resultData;
             var hasError:Bool = false;
@@ -360,7 +359,7 @@ class RequestActivity extends Activity {
 
             } catch (e:Dynamic) {
 
-                ApiRockOut.printWithTab("- ERROR! Received data is not a valid json.", 3);
+                this.printWithTab("- ERROR! Received data is not a valid json.", 3);
                 hasError = true;
 
             }
@@ -370,15 +369,15 @@ class RequestActivity extends Activity {
                     var anon:AnonStruct = Type.createInstance(this.anonClass, this.anonArgs == null ? [] : this.anonArgs);
                     anon.validateAll(data);
 
-                    ApiRockOut.printWithTab("- Success!", 3);
+                    this.printWithTab("- Success!", 3);
 
                 } catch (e:Dynamic) {
 
                     var errors:Array<String> = e;
                     hasError = true;
 
-                    ApiRockOut.printWithTab("- Error", 3);
-                    ApiRockOut.printList(errors, 4);
+                    this.printWithTab("- Error", 3);
+                    this.printList(errors, 4);
 
                 }
             }
@@ -386,9 +385,9 @@ class RequestActivity extends Activity {
             if (hasError) this.apirock.errors.push('EXPECTATION error at ${index + 1}.${subIndex}.');
 
             if (hasError && this.isCriticalStrof) {
-                ApiRockOut.print('');
-                ApiRockOut.printBox('Error on Critical Assertive');
-                ApiRockOut.print('');
+                this.print('');
+                this.printBox('Error on Critical Assertive');
+                this.print('');
 
                 Sys.exit(301);
             }
@@ -402,7 +401,7 @@ class RequestActivity extends Activity {
 
         if (this.keepList.length > 0) {
 
-            ApiRockOut.printIndex('${index + 1}.${++subIndex}.', 'Keeping data in memory...');
+            this.printIndex('${index + 1}.${++subIndex}.', 'Keeping data in memory...');
             var data:Dynamic = null;
 
             try {
