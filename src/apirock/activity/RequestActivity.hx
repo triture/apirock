@@ -164,12 +164,6 @@ class RequestActivity extends Activity {
                     this.resultHeaders.exists('content-type') && 
                     this.resultHeaders.get('content-type').indexOf('application/json') > -1
                 ) data = haxe.Json.parse(this.resultData);
-                else {
-                    try {
-                        data = haxe.Json.parse(this.resultData);
-                    } catch (e:Dynamic) {}
-                }
-
             } catch (e:Dynamic) {
 
                 this.printWithTab("- Error! Received data is not a valid json.", 3);
