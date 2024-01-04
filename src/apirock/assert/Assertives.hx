@@ -110,7 +110,7 @@ class Assertives {
         var error:String = "";
         error += "Wrong value";
 
-        if (map.length > 0) error += " for " + map.join(".");
+        if (map.length > 0) error += ' for \'${map.join(".")}\'';
 
         error += ": Expects '" + Std.string(expected) + "' and Gets '" + Std.string(gets) + "'";
 
@@ -215,7 +215,8 @@ class Assertives {
             if (Reflect.hasField(a, field) && Reflect.hasField(b, field)) {
                 if (!this.compareValues(
                     Reflect.field(a, field),
-                    Reflect.field(b, field)
+                    Reflect.field(b, field),
+                    map
                 )) return false;
             } else if (StringTools.endsWith(field, '[?]')) {
                 var arrField:String = field.substr(0, field.length-3);
@@ -244,7 +245,7 @@ class Assertives {
                     }
 
                 } else {
-                    this.addError("Field " + map.join(".") + " not found");
+                    this.addError("Field '" + map.join(".") + "' not found");
                     return false;
                 }
 
@@ -262,11 +263,11 @@ class Assertives {
                         arrData[index]
                     )) return false;
                 } else {
-                    this.addError("Field " + map.join(".") + " not found");
+                    this.addError("Field '" + map.join(".") + "' not found");
                     return false;
                 }
             } else {
-                this.addError("Field " + map.join(".") + " not found");
+                this.addError("Field '" + map.join(".") + "' not found");
                 return false;
             }
 
