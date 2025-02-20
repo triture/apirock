@@ -1,5 +1,6 @@
 package apirock.activity;
 
+import anonstruct.AnonStructError;
 import haxe.io.Bytes;
 import apirock.ApiRock;
 import haxe.ds.StringMap;
@@ -366,13 +367,17 @@ class RequestActivity extends Activity {
                     this.printWithTab("- Success!", 3);
 
                 } catch (e:Dynamic) {
-
-                    var errors:Array<String> = e;
                     hasError = true;
 
-                    this.printWithTab("- Error", 3);
-                    this.printList(errors, 4);
-
+                    if (Std.isOfType(e, Array)) {
+                        var errors:Array<AnonStructError> = e;
+                        var errorsString:Array<String> = [for (e in errors) e.toString()];
+                        
+                        this.printWithTab("- Error", 3);
+                        this.printList(errorsString, 4);
+                    } else {
+                        this.printWithTab('- Error: ${Std.string(e)}', 3);
+                    }
                 }
             }
 
